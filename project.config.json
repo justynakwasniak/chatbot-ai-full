@@ -1,0 +1,21 @@
+{
+  "projectName": "Task Chatbot AI",
+  "version": "0.1.0",
+  "description": "Full-stack application for managing tasks with AI-powered chat assistance",
+  "technologies": {
+    "frontend": ["React", "Next.js", "TypeScript", "Tailwind CSS"],
+    "backend": ["Node.js", "Express", "TypeScript"],
+    "database": ["Supabase", "PostgreSQL"],
+    "authentication": "Supabase Auth"
+  },
+  "ports": {
+    "frontend": 3000,
+    "backend": 5000,
+    "supabase": 5432
+  },
+  "directories": {
+    "frontend": "./frontend",
+    "backend": "./backend",
+    "shared": "./shared"
+  }
+}
