@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'Nova — AI Assistant',
+  title: 'HablaAI',
   description: 'Twój nowoczesny asystent AI do rozmów',
   generator: 'v0.app',
   icons: {

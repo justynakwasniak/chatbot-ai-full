@@ -18,119 +18,77 @@ export interface Conversation {
 export const conversations: Conversation[] = [
   {
     id: "1",
-    title: "Pomysły na nazwę startupu",
-    preview: "Świetnie, oto kilka propozycji nazw...",
+    title: "Powitania i podstawy",
+    preview: "¡Hola! — to najprostsze powitanie...",
     updatedAt: "Teraz",
     messages: [
       {
         id: "m1",
         role: "user",
-        content: "Cześć! Pomóż mi wymyślić nazwę dla startupu zajmującego się AI w finansach.",
+        content: "Jak powiedzieć „cześć” po hiszpańsku?",
         timestamp: "13:42",
       },
       {
         id: "m2",
         role: "assistant",
         content:
-          "Jasne! Oto kilka propozycji, które łączą tematykę finansów z nowoczesnością AI:\n\n• FinPulse — sugeruje puls rynku w czasie rzeczywistym\n• Lumora — od „lumen\" (światło) i klarowności danych\n• Vantai — gra słów „vantage\" (przewaga) + AI\n\nKtóry kierunek najbardziej Ci odpowiada — bardziej techniczny czy przyjazny użytkownikowi?",
+          "¡Hola! — to najprostsze i najczęstsze powitanie.\n\nRano możesz powiedzieć „Buenos días”, wieczorem „Buenas noches”. Na pożegnanie: „Adiós” lub „Hasta luego”.\n\nSpróbuj teraz: jak powiedziałbyś „Dzień dobry, jak się masz?”",
         timestamp: "13:42",
       },
       {
         id: "m3",
         role: "user",
-        content: "Podoba mi się Lumora. Możesz rozwinąć ten kierunek?",
+        content: "Buenos días, ¿cómo estás?",
         timestamp: "13:43",
       },
       {
         id: "m4",
         role: "assistant",
         content:
-          "Świetny wybór! „Lumora\" brzmi nowocześnie i budzi skojarzenia z przejrzystością oraz inteligentnymi wglądami w dane. Pasują do tego hasła takie jak „Zobacz swoje finanse w nowym świetle\" albo „Klarowność, którą napędza AI\".",
+          "Świetnie! ✔ „Buenos días, ¿cómo estás?” jest poprawne.\n\nPamiętaj o znaku ¿ na początku pytania. Odpowiedź: „Estoy bien, gracias”.\n\nĆwiczenie: napisz jak odpowiedziałbyś „Dobrze, dziękuję, a Ty?”",
         timestamp: "13:43",
       },
     ],
   },
   {
     id: "2",
-    title: "Plan treningowy na tydzień",
-    preview: "Oto zbalansowany plan na 5 dni...",
+    title: "Czas przeszły — pretérito",
+    preview: "Mała poprawka: „Fui a la tienda ayer” ✔",
     updatedAt: "2 godz temu",
     messages: [
       {
         id: "m1",
         role: "user",
-        content: "Ułóż mi plan treningowy na siłownię na tydzień.",
+        content: "Yo fui a la tienda ayer",
         timestamp: "11:10",
       },
       {
         id: "m2",
         role: "assistant",
         content:
-          "Oczywiście! Oto zbalansowany plan na 5 dni:\n\n• Pon — Klatka i triceps\n• Wt — Plecy i biceps\n• Śr — Nogi\n• Czw — Odpoczynek / cardio\n• Pt — Barki i brzuch\n\nChcesz, żebym dodał konkretne ćwiczenia i liczbę serii?",
+          "Mała poprawka: „Fui a la tienda ayer” ✔\n\n„Yo” jest zbędne — w hiszpańskim często pomija się podmiot. „ir a” wymaga przyimka „a”.\n\nSpróbuj teraz użyć innego czasownika: np. „Wczoraj poszedłem do kina”.",
         timestamp: "11:11",
       },
     ],
   },
   {
     id: "3",
-    title: "Wyjaśnienie React Server Components",
-    preview: "RSC pozwalają renderować komponenty...",
+    title: "Słownictwo — jedzenie",
+    preview: "„La manzana” to jabłko, „el pan” to chleb...",
     updatedAt: "Wczoraj",
     messages: [
       {
         id: "m1",
         role: "user",
-        content: "Wytłumacz mi prosto czym są React Server Components.",
+        content: "Jak powiedzieć jabłko, chleb i woda po hiszpańsku?",
         timestamp: "18:30",
       },
       {
         id: "m2",
         role: "assistant",
         content:
-          "React Server Components (RSC) to komponenty renderowane na serwerze, które nie wysyłają swojego kodu JS do przeglądarki. Dzięki temu aplikacja jest lżejsza i szybsza, a Ty możesz bezpiecznie sięgać po dane bezpośrednio na serwerze.",
+          "„La manzana” — jabłko\n„El pan” — chleb\n„El agua” — woda (uwaga: rodzaj żeński, ale „el” zamiast „la”!)\n\nZapamiętaj: większość słów kończących się na -a to rodzaj żeński.\n\nĆwiczenie: przetłumacz „Chcę wodę i chleb”.",
         timestamp: "18:31",
-      },
-    ],
-  },
-  {
-    id: "4",
-    title: "Przepis na szybki obiad",
-    preview: "Makaron z czosnkiem i oliwą...",
-    updatedAt: "Wczoraj",
-    messages: [
-      {
-        id: "m1",
-        role: "user",
-        content: "Mam 15 minut, co mogę szybko ugotować?",
-        timestamp: "20:05",
-      },
-      {
-        id: "m2",
-        role: "assistant",
-        content:
-          "Polecam aglio e olio — makaron z czosnkiem i oliwą. Wystarczy ugotować spaghetti, podsmażyć czosnek na oliwie z chili, wymieszać i posypać natką. Gotowe w 15 minut!",
-        timestamp: "20:06",
-      },
-    ],
-  },
-  {
-    id: "5",
-    title: "Pomoc z CV",
-    preview: "Świetnie, dopracujmy sekcję o doświadczeniu...",
-    updatedAt: "3 dni temu",
-    messages: [
-      {
-        id: "m1",
-        role: "user",
-        content: "Pomożesz mi poprawić CV pod stanowisko frontend developera?",
-        timestamp: "09:15",
-      },
-      {
-        id: "m2",
-        role: "assistant",
-        content:
-          "Z przyjemnością! Zacznijmy od sekcji o doświadczeniu — warto opisywać osiągnięcia liczbami, np. „Zwiększyłem wydajność strony o 40%\". Wklej swoją obecną treść, a zaproponuję konkretne poprawki.",
-        timestamp: "09:16",
       },
     ],
   },

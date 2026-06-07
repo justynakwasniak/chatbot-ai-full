@@ -1,4 +1,5 @@
 import { Router, Request, Response } from 'express';
+import { getTeacherResponse } from '../services/groqService';
 
 const router = Router();
 
@@ -40,22 +41,62 @@ router.post('/', (req: Request, res: Response) => {
 });
 
 // POST send message to AI
-router.post('/message', (req: Request, res: Response) => {
+router.post('/message', async (req: Request, res: Response) => {
   try {
-    const { task_id, message } = req.body;
-    res.status(201).json({
+    const { message } = req.body;
+
+    if (!message) {
+      return res.status(400).json({
+        success: false,
+        error: 'Message is required',
+      });
+    }
+
+    if (!process.env.GROQ_API_KEY) {
+      return res.status(500).json({
+        success: false,
+        error: 'Groq API key not configured. Dodaj GROQ_API_KEY do backend/.env',
+      });
+    }
+
+    console.log('[Chat Request]');
+    console.log('User Message:', message);
+
+    const teacherResponse = await getTeacherResponse(message);
+
+    res.json({
       success: true,
+      response: teacherResponse,
       data: {
-        id: '1',
-        task_id,
-        content: 'AI response placeholder',
+        id: Math.random().toString(36).slice(2, 11),
+        content: teacherResponse,
         sender: 'ai',
-        created_at: new Date().toISOString(),
+        timestamp: new Date().toISOString(),
       },
-      message: 'Message sent successfully',
     });
-  } catch (error) {
-    res.status(500).json({ success: false, error: 'Failed to send message' });
+  } catch (error: unknown) {
+    console.error('Chat error:', error);
+
+    const apiError = error as { status?: number; code?: string; message?: string };
+
+    if (apiError.status === 401) {
+      return res.status(500).json({
+        success: false,
+        error: 'Nieprawidłowy klucz Groq API. Sprawdź GROQ_API_KEY w backend/.env.',
+      });
+    }
+
+    if (apiError.status === 429) {
+      return res.status(429).json({
+        success: false,
+        error: 'Limit zapytań Groq przekroczony. Spróbuj za chwilę.',
+      });
+    }
+
+    res.status(500).json({
+      success: false,
+      error: apiError.message || 'Failed to send message',
+    });
   }
 });
 

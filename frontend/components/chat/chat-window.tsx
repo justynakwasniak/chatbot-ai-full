@@ -36,7 +36,7 @@ export function ChatWindow({ conversation, onSend, onOpenSidebar }: ChatWindowPr
           </h1>
           <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <span className="size-1.5 rounded-full bg-primary" />
-            Nova 1.0 · online
+            HablaAI 1.0 · online
           </p>
         </div>
       </header>

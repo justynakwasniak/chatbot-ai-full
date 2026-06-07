@@ -52,7 +52,7 @@ export function ChatInput({ onSend }: ChatInputProps) {
             onInput={handleInput}
             onKeyDown={handleKeyDown}
             rows={1}
-            placeholder="Napisz wiadomość do Nova..."
+            placeholder="Napisz wiadomość do HablaAI..."
             className="max-h-40 flex-1 resize-none bg-transparent py-2 text-sm leading-relaxed text-foreground placeholder:text-muted-foreground focus:outline-none"
           />
 
@@ -73,7 +73,7 @@ export function ChatInput({ onSend }: ChatInputProps) {
           </button>
         </div>
         <p className="mt-2 text-center text-xs text-muted-foreground">
-          Nova może popełniać błędy. Zweryfikuj ważne informacje.
+          HablaAI może popełniać błędy. Zweryfikuj ważne informacje.
         </p>
       </div>
     </div>

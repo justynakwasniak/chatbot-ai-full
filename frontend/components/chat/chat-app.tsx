@@ -14,14 +14,17 @@ export function ChatApp() {
 
   const active = conversations.find((c) => c.id === activeId)
 
-  function handleSend(text: string) {
+  async function handleSend(text: string) {
     const now = new Date().toLocaleTimeString("pl-PL", { hour: "2-digit", minute: "2-digit" })
+    
+    // Add user message immediately
     const newMessage: Message = {
       id: `${Date.now()}`,
       role: "user",
       content: text,
       timestamp: now,
     }
+    
     setConversations((prev) =>
       prev.map((c) =>
         c.id === activeId
@@ -29,6 +32,68 @@ export function ChatApp() {
           : c,
       ),
     )
+
+    try {
+      // Send message to backend
+      const response = await fetch("http://localhost:5000/api/chat/message", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ message: text }),
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        const aiMessage: Message = {
+          id: data.data?.id || `${Date.now()}-ai`,
+          role: "assistant",
+          content: data.response || data.data?.content || "Przepraszam, nie udało mi się przetworzyć Twojej wiadomości.",
+          timestamp: new Date().toLocaleTimeString("pl-PL", { hour: "2-digit", minute: "2-digit" }),
+        }
+
+        setConversations((prev) =>
+          prev.map((c) =>
+            c.id === activeId
+              ? { ...c, messages: [...c.messages, aiMessage] }
+              : c,
+          ),
+        )
+      } else {
+        const errorMessage: Message = {
+          id: `${Date.now()}-error`,
+          role: "assistant",
+          content: `❌ ${data.error || "Nie udało się uzyskać odpowiedzi od AI."}`,
+          timestamp: new Date().toLocaleTimeString("pl-PL", { hour: "2-digit", minute: "2-digit" }),
+        }
+
+        setConversations((prev) =>
+          prev.map((c) =>
+            c.id === activeId
+              ? { ...c, messages: [...c.messages, errorMessage] }
+              : c,
+          ),
+        )
+      }
+    } catch (error) {
+      console.error("Error sending message:", error)
+      // Add error message
+      const errorMessage: Message = {
+        id: `${Date.now()}-error`,
+        role: "assistant",
+        content: "❌ Błąd połączenia z serwerem. Spróbuj ponownie.",
+        timestamp: new Date().toLocaleTimeString("pl-PL", { hour: "2-digit", minute: "2-digit" }),
+      }
+
+      setConversations((prev) =>
+        prev.map((c) =>
+          c.id === activeId
+            ? { ...c, messages: [...c.messages, errorMessage] }
+            : c,
+        ),
+      )
+    }
   }
 
   function handleNewChat() {

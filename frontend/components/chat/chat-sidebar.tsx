@@ -3,6 +3,7 @@
 import { cn } from "@/lib/utils"
 import type { Conversation } from "@/lib/chat-data"
 import { Plus, MessageSquare, Search, Sparkles, Settings, PanelLeftClose } from "lucide-react"
+import { User } from '../../../shared/types/index';
 
 interface ChatSidebarProps {
   conversations: Conversation[]
@@ -21,7 +22,7 @@ export function ChatSidebar({ conversations, activeId, onSelect, onNewChat, onCl
           <div className="flex size-8 items-center justify-center rounded-lg bg-primary/15 text-primary ring-1 ring-primary/30">
             <Sparkles className="size-4" />
           </div>
-          <span className="text-base font-semibold tracking-tight text-foreground">Nova</span>
+          <span className="text-base font-semibold tracking-tight text-foreground">HablaAI</span>
         </div>
         {onClose && (
           <button
@@ -106,10 +107,10 @@ export function ChatSidebar({ conversations, activeId, onSelect, onNewChat, onCl
       <div className="border-t border-border p-3">
         <button className="flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left transition-colors hover:bg-secondary/60">
           <div className="flex size-8 items-center justify-center rounded-full bg-accent text-sm font-medium text-accent-foreground">
-            AK
+            JK
           </div>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-medium text-foreground">Anna Kowalska</p>
+            <p className="truncate text-sm font-medium text-foreground">User</p>
             <p className="truncate text-xs text-muted-foreground">Plan Pro</p>
           </div>
           <Settings className="size-4 text-muted-foreground" />
