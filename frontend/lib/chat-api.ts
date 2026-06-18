@@ -59,11 +59,12 @@ export async function fetchConversationMessages(conversationId: string): Promise
   return data.data;
 }
 
-export async function sendChatMessage(conversationId: string, message: string, dbEnabled: boolean) {
+export async function sendChatMessage(conversationId: string, message: string) {
   const sessionId = getOrCreateSessionId();
   return request<{
     success: true;
     response: string;
+    conversation_id?: string;
     data: {
       id: string;
       content: string;
@@ -74,9 +75,8 @@ export async function sendChatMessage(conversationId: string, message: string, d
     method: 'POST',
     body: JSON.stringify({
       message,
-      ...(dbEnabled
-        ? { conversation_id: conversationId, session_id: sessionId }
-        : {}),
+      conversation_id: conversationId,
+      session_id: sessionId,
     }),
   });
 }

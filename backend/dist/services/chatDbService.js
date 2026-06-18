@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.listConversations = listConversations;
 exports.createConversation = createConversation;
 exports.getConversationMessages = getConversationMessages;
+exports.ensureConversation = ensureConversation;
 exports.addMessage = addMessage;
 exports.mapConversationForApi = mapConversationForApi;
 const supabase_1 = require("../config/supabase");
@@ -74,6 +75,23 @@ async function getConversationMessages(conversationId, sessionId) {
     if (error)
         throw error;
     return (data ?? []);
+}
+async function ensureConversation(sessionId, conversationId) {
+    const supabase = (0, supabase_1.getSupabase)();
+    if (!supabase)
+        throw new Error('Supabase not configured');
+    if (conversationId) {
+        const { data } = await supabase
+            .from('conversations')
+            .select('id')
+            .eq('id', conversationId)
+            .eq('session_id', sessionId)
+            .maybeSingle();
+        if (data?.id)
+            return data.id;
+    }
+    const created = await createConversation(sessionId);
+    return created.id;
 }
 async function addMessage(conversationId, sessionId, role, content) {
     const supabase = (0, supabase_1.getSupabase)();

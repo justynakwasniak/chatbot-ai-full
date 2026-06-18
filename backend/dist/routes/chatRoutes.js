@@ -5,6 +5,12 @@ const supabase_1 = require("../config/supabase");
 const chatDbService_1 = require("../services/chatDbService");
 const groqService_1 = require("../services/groqService");
 const router = (0, express_1.Router)();
+router.get('/status', (req, res) => {
+    res.json({
+        success: true,
+        dbEnabled: (0, supabase_1.isSupabaseConfigured)(),
+    });
+});
 router.get('/conversations', async (req, res) => {
     try {
         const sessionId = String(req.query.session_id || '');
@@ -40,7 +46,14 @@ router.post('/conversations', async (req, res) => {
     }
     catch (error) {
         console.error('Create conversation error:', error);
-        res.status(500).json({ success: false, error: 'Failed to create conversation' });
+        const message = error instanceof Error ? error.message : 'Failed to create conversation';
+        const isRlsError = message.includes('row-level security');
+        res.status(500).json({
+            success: false,
+            error: isRlsError
+                ? 'Supabase RLS blocked the request. Use the service_role key as SUPABASE_KEY in backend/.env (not the anon/publishable key).'
+                : message,
+        });
     }
 });
 router.get('/conversations/:id', async (req, res) => {
@@ -82,25 +95,34 @@ router.post('/message', async (req, res) => {
             });
         }
         if ((0, supabase_1.isSupabaseConfigured)()) {
-            if (!conversationId || !sessionId) {
+            if (!sessionId) {
                 return res.status(400).json({
                     success: false,
-                    error: 'conversation_id and session_id are required when database is enabled',
+                    error: 'session_id is required when database is enabled',
                 });
             }
-            await (0, chatDbService_1.addMessage)(conversationId, sessionId, 'user', message);
+            const resolvedConversationId = await (0, chatDbService_1.ensureConversation)(sessionId, conversationId);
+            await (0, chatDbService_1.addMessage)(resolvedConversationId, sessionId, 'user', message);
+            const teacherResponse = await (0, groqService_1.getTeacherResponse)(message);
+            const savedMessage = await (0, chatDbService_1.addMessage)(resolvedConversationId, sessionId, 'assistant', teacherResponse);
+            return res.json({
+                success: true,
+                response: teacherResponse,
+                conversation_id: resolvedConversationId,
+                data: {
+                    id: savedMessage.id,
+                    content: teacherResponse,
+                    sender: 'ai',
+                    timestamp: new Date().toISOString(),
+                },
+            });
         }
         const teacherResponse = await (0, groqService_1.getTeacherResponse)(message);
-        let savedMessageId = Math.random().toString(36).slice(2, 11);
-        if ((0, supabase_1.isSupabaseConfigured)() && conversationId && sessionId) {
-            const savedMessage = await (0, chatDbService_1.addMessage)(conversationId, sessionId, 'assistant', teacherResponse);
-            savedMessageId = savedMessage.id;
-        }
         res.json({
             success: true,
             response: teacherResponse,
             data: {
-                id: savedMessageId,
+                id: Math.random().toString(36).slice(2, 11),
                 content: teacherResponse,
                 sender: 'ai',
                 timestamp: new Date().toISOString(),
@@ -124,7 +146,9 @@ router.post('/message', async (req, res) => {
         }
         res.status(500).json({
             success: false,
-            error: apiError.message || 'Failed to send message',
+            error: apiError.message?.includes('row-level security')
+                ? 'Supabase RLS blocked the request. Use the service_role key as SUPABASE_KEY in backend/.env (not the anon/publishable key).'
+                : apiError.message || 'Failed to send message',
         });
     }
 });

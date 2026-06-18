@@ -21,9 +21,9 @@ create index if not exists idx_conversations_session_id on conversations(session
 create index if not exists idx_conversations_updated_at on conversations(updated_at desc);
 create index if not exists idx_messages_conversation_id on messages(conversation_id);
 
--- Security: enable RLS (backend uses service_role key and bypasses RLS)
+-- Security: enable RLS (backend must use service_role key — it bypasses RLS)
 alter table conversations enable row level security;
 alter table messages enable row level security;
 
--- No public policies = anon/authenticated clients cannot access these tables.
--- Only the backend (service_role key) can read/write.
+-- No public policies = anon/publishable keys cannot access these tables.
+-- Backend uses SUPABASE_KEY=service_role from Project Settings → API Keys.

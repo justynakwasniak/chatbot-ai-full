@@ -4,7 +4,6 @@ import { useEffect, useState } from "react"
 import type { Conversation, Message } from "@/lib/chat-data"
 import {
   createConversation,
-  fetchChatStatus,
   fetchConversationMessages,
   fetchConversations,
   sendChatMessage,
@@ -37,7 +36,7 @@ export function ChatApp() {
     async function loadConversations() {
       try {
         setLoadError(null)
-        const hasDatabase = await fetchChatStatus()
+        const { conversations: data, dbEnabled: hasDatabase } = await fetchConversations()
         setDbEnabled(hasDatabase)
 
         if (!hasDatabase) {
@@ -46,8 +45,6 @@ export function ChatApp() {
           setActiveId(local.id)
           return
         }
-
-        const { conversations: data } = await fetchConversations()
 
         if (data.length > 0) {
           setConversations(data)
@@ -94,7 +91,12 @@ export function ChatApp() {
     )
 
     try {
-      const data = await sendChatMessage(activeId, text, dbEnabled)
+      const data = await sendChatMessage(activeId, text)
+      const resolvedId = data.conversation_id ?? activeId
+
+      if (resolvedId !== activeId) {
+        setActiveId(resolvedId)
+      }
 
       const aiMessage: Message = {
         id: data.data?.id || `${Date.now()}-ai`,
@@ -106,7 +108,7 @@ export function ChatApp() {
       setConversations((prev) =>
         prev.map((c) =>
           c.id === activeId
-            ? { ...c, messages: [...c.messages, aiMessage] }
+            ? { ...c, id: resolvedId, messages: [...c.messages, aiMessage] }
             : c,
         ),
       )

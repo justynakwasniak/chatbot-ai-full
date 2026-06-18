@@ -16,6 +16,7 @@ export interface DbMessage {
 export declare function listConversations(sessionId: string): Promise<DbConversation[]>;
 export declare function createConversation(sessionId: string, title?: string): Promise<DbConversation>;
 export declare function getConversationMessages(conversationId: string, sessionId: string): Promise<DbMessage[]>;
+export declare function ensureConversation(sessionId: string, conversationId?: string): Promise<string>;
 export declare function addMessage(conversationId: string, sessionId: string, role: 'user' | 'assistant', content: string): Promise<DbMessage>;
 export declare function mapConversationForApi(conversation: DbConversation, messages?: DbMessage[]): {
     id: string;

@@ -3,6 +3,7 @@ import { isSupabaseConfigured } from '../config/supabase';
 import {
   addMessage,
   createConversation,
+  ensureConversation,
   getConversationMessages,
   listConversations,
   mapConversationForApi,
@@ -59,7 +60,15 @@ router.post('/conversations', async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error('Create conversation error:', error);
-    res.status(500).json({ success: false, error: 'Failed to create conversation' });
+    const message = error instanceof Error ? error.message : 'Failed to create conversation';
+    const isRlsError = message.includes('row-level security');
+
+    res.status(500).json({
+      success: false,
+      error: isRlsError
+        ? 'Supabase RLS blocked the request. Use the service_role key as SUPABASE_KEY in backend/.env (not the anon/publishable key).'
+        : message,
+    });
   }
 });
 
@@ -111,30 +120,39 @@ router.post('/message', async (req: Request, res: Response) => {
     }
 
     if (isSupabaseConfigured()) {
-      if (!conversationId || !sessionId) {
+      if (!sessionId) {
         return res.status(400).json({
           success: false,
-          error: 'conversation_id and session_id are required when database is enabled',
+          error: 'session_id is required when database is enabled',
         });
       }
 
-      await addMessage(conversationId, sessionId, 'user', message);
+      const resolvedConversationId = await ensureConversation(sessionId, conversationId);
+      await addMessage(resolvedConversationId, sessionId, 'user', message);
+
+      const teacherResponse = await getTeacherResponse(message);
+      const savedMessage = await addMessage(resolvedConversationId, sessionId, 'assistant', teacherResponse);
+
+      return res.json({
+        success: true,
+        response: teacherResponse,
+        conversation_id: resolvedConversationId,
+        data: {
+          id: savedMessage.id,
+          content: teacherResponse,
+          sender: 'ai',
+          timestamp: new Date().toISOString(),
+        },
+      });
     }
 
     const teacherResponse = await getTeacherResponse(message);
-
-    let savedMessageId = Math.random().toString(36).slice(2, 11);
-
-    if (isSupabaseConfigured() && conversationId && sessionId) {
-      const savedMessage = await addMessage(conversationId, sessionId, 'assistant', teacherResponse);
-      savedMessageId = savedMessage.id;
-    }
 
     res.json({
       success: true,
       response: teacherResponse,
       data: {
-        id: savedMessageId,
+        id: Math.random().toString(36).slice(2, 11),
         content: teacherResponse,
         sender: 'ai',
         timestamp: new Date().toISOString(),
@@ -161,7 +179,9 @@ router.post('/message', async (req: Request, res: Response) => {
 
     res.status(500).json({
       success: false,
-      error: apiError.message || 'Failed to send message',
+      error: apiError.message?.includes('row-level security')
+        ? 'Supabase RLS blocked the request. Use the service_role key as SUPABASE_KEY in backend/.env (not the anon/publishable key).'
+        : apiError.message || 'Failed to send message',
     });
   }
 });

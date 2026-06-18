@@ -89,6 +89,25 @@ export async function getConversationMessages(conversationId: string, sessionId:
   return (data ?? []) as DbMessage[];
 }
 
+export async function ensureConversation(sessionId: string, conversationId?: string): Promise<string> {
+  const supabase = getSupabase();
+  if (!supabase) throw new Error('Supabase not configured');
+
+  if (conversationId) {
+    const { data } = await supabase
+      .from('conversations')
+      .select('id')
+      .eq('id', conversationId)
+      .eq('session_id', sessionId)
+      .maybeSingle();
+
+    if (data?.id) return data.id;
+  }
+
+  const created = await createConversation(sessionId);
+  return created.id;
+}
+
 export async function addMessage(
   conversationId: string,
   sessionId: string,
