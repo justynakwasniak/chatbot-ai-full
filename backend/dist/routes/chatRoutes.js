@@ -1,54 +1,79 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
+const supabase_1 = require("../config/supabase");
+const chatDbService_1 = require("../services/chatDbService");
 const groqService_1 = require("../services/groqService");
 const router = (0, express_1.Router)();
-// GET main chat endpoint (for testing in browser)
-router.get('/', (req, res) => {
+router.get('/conversations', async (req, res) => {
     try {
-        res.json({
+        const sessionId = String(req.query.session_id || '');
+        if (!sessionId) {
+            return res.status(400).json({ success: false, error: 'session_id is required' });
+        }
+        if (!(0, supabase_1.isSupabaseConfigured)()) {
+            return res.json({ success: true, data: [], dbEnabled: false });
+        }
+        const conversations = await (0, chatDbService_1.listConversations)(sessionId);
+        const data = conversations.map((conversation) => (0, chatDbService_1.mapConversationForApi)(conversation));
+        res.json({ success: true, data, dbEnabled: true });
+    }
+    catch (error) {
+        console.error('List conversations error:', error);
+        res.status(500).json({ success: false, error: 'Failed to fetch conversations' });
+    }
+});
+router.post('/conversations', async (req, res) => {
+    try {
+        const { session_id: sessionId, title } = req.body;
+        if (!sessionId) {
+            return res.status(400).json({ success: false, error: 'session_id is required' });
+        }
+        if (!(0, supabase_1.isSupabaseConfigured)()) {
+            return res.status(503).json({ success: false, error: 'Database not configured' });
+        }
+        const conversation = await (0, chatDbService_1.createConversation)(sessionId, title);
+        res.status(201).json({
             success: true,
-            message: 'Hello from backend - Chat API',
-            data: {
-                id: '1',
-                content: 'Hello from backend',
-                sender: 'ai',
-                timestamp: new Date().toISOString(),
-            },
-            note: 'Use POST method to send messages',
+            data: (0, chatDbService_1.mapConversationForApi)(conversation),
         });
     }
     catch (error) {
-        res.status(500).json({ success: false, error: 'Failed to process chat message' });
+        console.error('Create conversation error:', error);
+        res.status(500).json({ success: false, error: 'Failed to create conversation' });
     }
 });
-// POST main chat endpoint
-router.post('/', (req, res) => {
+router.get('/conversations/:id', async (req, res) => {
     try {
+        const sessionId = String(req.query.session_id || '');
+        const { id } = req.params;
+        if (!sessionId) {
+            return res.status(400).json({ success: false, error: 'session_id is required' });
+        }
+        if (!(0, supabase_1.isSupabaseConfigured)()) {
+            return res.status(503).json({ success: false, error: 'Database not configured' });
+        }
+        const conversations = await (0, chatDbService_1.listConversations)(sessionId);
+        const conversation = conversations.find((item) => item.id === id);
+        if (!conversation) {
+            return res.status(404).json({ success: false, error: 'Conversation not found' });
+        }
+        const messages = await (0, chatDbService_1.getConversationMessages)(id, sessionId);
         res.json({
             success: true,
-            message: 'Hello from backend',
-            data: {
-                id: '1',
-                content: 'Hello from backend',
-                sender: 'ai',
-                timestamp: new Date().toISOString(),
-            },
+            data: (0, chatDbService_1.mapConversationForApi)(conversation, messages),
         });
     }
     catch (error) {
-        res.status(500).json({ success: false, error: 'Failed to process chat message' });
+        console.error('Get conversation error:', error);
+        res.status(500).json({ success: false, error: 'Failed to fetch conversation' });
     }
 });
-// POST send message to AI
 router.post('/message', async (req, res) => {
     try {
-        const { message } = req.body;
+        const { message, conversation_id: conversationId, session_id: sessionId } = req.body;
         if (!message) {
-            return res.status(400).json({
-                success: false,
-                error: 'Message is required',
-            });
+            return res.status(400).json({ success: false, error: 'Message is required' });
         }
         if (!process.env.GROQ_API_KEY) {
             return res.status(500).json({
@@ -56,14 +81,26 @@ router.post('/message', async (req, res) => {
                 error: 'Groq API key not configured. Add GROQ_API_KEY to backend/.env',
             });
         }
-        console.log('[Chat Request]');
-        console.log('User Message:', message);
+        if ((0, supabase_1.isSupabaseConfigured)()) {
+            if (!conversationId || !sessionId) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'conversation_id and session_id are required when database is enabled',
+                });
+            }
+            await (0, chatDbService_1.addMessage)(conversationId, sessionId, 'user', message);
+        }
         const teacherResponse = await (0, groqService_1.getTeacherResponse)(message);
+        let savedMessageId = Math.random().toString(36).slice(2, 11);
+        if ((0, supabase_1.isSupabaseConfigured)() && conversationId && sessionId) {
+            const savedMessage = await (0, chatDbService_1.addMessage)(conversationId, sessionId, 'assistant', teacherResponse);
+            savedMessageId = savedMessage.id;
+        }
         res.json({
             success: true,
             response: teacherResponse,
             data: {
-                id: Math.random().toString(36).slice(2, 11),
+                id: savedMessageId,
                 content: teacherResponse,
                 sender: 'ai',
                 timestamp: new Date().toISOString(),
@@ -89,19 +126,6 @@ router.post('/message', async (req, res) => {
             success: false,
             error: apiError.message || 'Failed to send message',
         });
-    }
-});
-// GET messages for task
-router.get('/task/:task_id', (req, res) => {
-    try {
-        res.json({
-            success: true,
-            data: [],
-            message: 'Messages fetched successfully',
-        });
-    }
-    catch (error) {
-        res.status(500).json({ success: false, error: 'Failed to fetch messages' });
     }
 });
 exports.default = router;

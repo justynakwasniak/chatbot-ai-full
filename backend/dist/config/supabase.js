@@ -1,11 +1,18 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.supabase = void 0;
+exports.isSupabaseConfigured = isSupabaseConfigured;
+exports.getSupabase = getSupabase;
 const supabase_js_1 = require("@supabase/supabase-js");
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_KEY;
-if (!supabaseUrl || !supabaseKey) {
-    throw new Error('Missing Supabase configuration');
+let client = null;
+function isSupabaseConfigured() {
+    return Boolean(process.env.SUPABASE_URL && process.env.SUPABASE_KEY);
 }
-exports.supabase = (0, supabase_js_1.createClient)(supabaseUrl, supabaseKey);
+function getSupabase() {
+    if (!isSupabaseConfigured())
+        return null;
+    if (!client) {
+        client = (0, supabase_js_1.createClient)(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
+    }
+    return client;
+}
 //# sourceMappingURL=supabase.js.map

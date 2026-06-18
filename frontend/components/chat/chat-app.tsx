@@ -1,30 +1,72 @@
 "use client"
 
-import { useState } from "react"
-import { conversations as initialConversations } from "@/lib/chat-data"
+import { useEffect, useState } from "react"
 import type { Conversation, Message } from "@/lib/chat-data"
+import { conversations as mockConversations } from "@/lib/chat-data"
+import {
+  createConversation,
+  fetchConversationMessages,
+  fetchConversations,
+  sendChatMessage,
+} from "@/lib/chat-api"
 import { ChatSidebar } from "./chat-sidebar"
 import { ChatWindow } from "./chat-window"
 import { cn } from "@/lib/utils"
 
 export function ChatApp() {
-  const [conversations, setConversations] = useState<Conversation[]>(initialConversations)
-  const [activeId, setActiveId] = useState<string>(initialConversations[0].id)
+  const [conversations, setConversations] = useState<Conversation[]>([])
+  const [activeId, setActiveId] = useState<string>("")
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [dbEnabled, setDbEnabled] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
 
   const active = conversations.find((c) => c.id === activeId)
 
+  useEffect(() => {
+    async function loadConversations() {
+      try {
+        const { conversations: data, dbEnabled: hasDatabase } = await fetchConversations()
+
+        if (!hasDatabase) {
+          setConversations(mockConversations)
+          setActiveId(mockConversations[0].id)
+          setDbEnabled(false)
+          return
+        }
+
+        if (data.length > 0) {
+          setConversations(data)
+          setActiveId(data[0].id)
+          setDbEnabled(true)
+          return
+        }
+
+        const created = await createConversation()
+        setConversations([created])
+        setActiveId(created.id)
+        setDbEnabled(true)
+      } catch {
+        setConversations(mockConversations)
+        setActiveId(mockConversations[0].id)
+        setDbEnabled(false)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    loadConversations()
+  }, [])
+
   async function handleSend(text: string) {
     const now = new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })
-    
-    // Add user message immediately
+
     const newMessage: Message = {
       id: `${Date.now()}`,
       role: "user",
       content: text,
       timestamp: now,
     }
-    
+
     setConversations((prev) =>
       prev.map((c) =>
         c.id === activeId
@@ -34,56 +76,28 @@ export function ChatApp() {
     )
 
     try {
-      // Send message to backend
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"
-      const response = await fetch(`${apiUrl}/api/chat/message`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ message: text }),
-      })
+      const data = await sendChatMessage(activeId, text)
 
-      const data = await response.json()
-
-      if (data.success) {
-        const aiMessage: Message = {
-          id: data.data?.id || `${Date.now()}-ai`,
-          role: "assistant",
-          content: data.response || data.data?.content || "Sorry, I couldn't process your message.",
-          timestamp: new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }),
-        }
-
-        setConversations((prev) =>
-          prev.map((c) =>
-            c.id === activeId
-              ? { ...c, messages: [...c.messages, aiMessage] }
-              : c,
-          ),
-        )
-      } else {
-        const errorMessage: Message = {
-          id: `${Date.now()}-error`,
-          role: "assistant",
-          content: `❌ ${data.error || "Couldn't get a response from AI."}`,
-          timestamp: new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }),
-        }
-
-        setConversations((prev) =>
-          prev.map((c) =>
-            c.id === activeId
-              ? { ...c, messages: [...c.messages, errorMessage] }
-              : c,
-          ),
-        )
+      const aiMessage: Message = {
+        id: data.data?.id || `${Date.now()}-ai`,
+        role: "assistant",
+        content: data.response || data.data?.content || "Sorry, I couldn't process your message.",
+        timestamp: new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }),
       }
+
+      setConversations((prev) =>
+        prev.map((c) =>
+          c.id === activeId
+            ? { ...c, messages: [...c.messages, aiMessage] }
+            : c,
+        ),
+      )
     } catch (error) {
       console.error("Error sending message:", error)
-      // Add error message
       const errorMessage: Message = {
         id: `${Date.now()}-error`,
         role: "assistant",
-        content: "❌ Connection error. Please try again.",
+        content: `❌ ${error instanceof Error ? error.message : "Connection error. Please try again."}`,
         timestamp: new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }),
       }
 
@@ -97,28 +111,55 @@ export function ChatApp() {
     }
   }
 
-  function handleNewChat() {
-    const id = `${Date.now()}`
-    const fresh: Conversation = {
-      id,
-      title: "New chat",
-      preview: "Start typing...",
-      updatedAt: "Now",
-      messages: [],
+  async function handleNewChat() {
+    try {
+      const fresh = dbEnabled
+        ? await createConversation()
+        : {
+            id: `${Date.now()}`,
+            title: "New chat",
+            preview: "Start typing...",
+            updatedAt: "Now",
+            messages: [],
+          }
+
+      setConversations((prev) => [fresh, ...prev])
+      setActiveId(fresh.id)
+      setSidebarOpen(false)
+    } catch (error) {
+      console.error("Error creating conversation:", error)
     }
-    setConversations((prev) => [fresh, ...prev])
-    setActiveId(id)
-    setSidebarOpen(false)
   }
 
-  function handleSelect(id: string) {
+  async function handleSelect(id: string) {
     setActiveId(id)
     setSidebarOpen(false)
+
+    if (!dbEnabled) return
+
+    const selected = conversations.find((conversation) => conversation.id === id)
+    if (!selected || selected.messages.length > 0) return
+
+    try {
+      const loaded = await fetchConversationMessages(id)
+      setConversations((prev) =>
+        prev.map((conversation) => (conversation.id === id ? loaded : conversation)),
+      )
+    } catch (error) {
+      console.error("Error loading conversation:", error)
+    }
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex h-dvh items-center justify-center bg-background text-sm text-muted-foreground">
+        Loading conversations...
+      </div>
+    )
   }
 
   return (
     <div className="relative flex h-dvh overflow-hidden bg-background">
-      {/* Subtle ambient glow */}
       <div
         aria-hidden
         className="pointer-events-none absolute -left-32 -top-32 size-96 rounded-full bg-primary/10 blur-[120px]"
@@ -128,7 +169,6 @@ export function ChatApp() {
         className="pointer-events-none absolute -bottom-40 right-0 size-96 rounded-full bg-accent/15 blur-[140px]"
       />
 
-      {/* Desktop sidebar */}
       <div className="hidden md:flex">
         <ChatSidebar
           conversations={conversations}
@@ -138,7 +178,6 @@ export function ChatApp() {
         />
       </div>
 
-      {/* Mobile sidebar overlay */}
       <div
         className={cn(
           "fixed inset-0 z-40 md:hidden",
@@ -168,7 +207,6 @@ export function ChatApp() {
         </div>
       </div>
 
-      {/* Main */}
       <main className="relative z-10 flex min-w-0 flex-1">
         <ChatWindow
           conversation={active}

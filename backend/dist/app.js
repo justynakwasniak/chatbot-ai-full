@@ -10,8 +10,20 @@ const taskRoutes_1 = __importDefault(require("./routes/taskRoutes"));
 const chatRoutes_1 = __importDefault(require("./routes/chatRoutes"));
 const app = (0, express_1.default)();
 // Middleware
+const allowedOrigins = [
+    'http://localhost:3000',
+    process.env.FRONTEND_URL,
+].filter((origin) => Boolean(origin));
 app.use((0, cors_1.default)({
-    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+    origin(origin, callback) {
+        if (!origin)
+            return callback(null, true);
+        if (allowedOrigins.includes(origin))
+            return callback(null, true);
+        if (origin.endsWith('.vercel.app'))
+            return callback(null, true);
+        callback(new Error(`CORS blocked: ${origin}`));
+    },
     credentials: true,
 }));
 app.use(express_1.default.json());
