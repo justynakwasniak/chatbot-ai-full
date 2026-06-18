@@ -11,6 +11,13 @@ import { getTeacherResponse } from '../services/groqService';
 
 const router = Router();
 
+router.get('/status', (req: Request, res: Response) => {
+  res.json({
+    success: true,
+    dbEnabled: isSupabaseConfigured(),
+  });
+});
+
 router.get('/conversations', async (req: Request, res: Response) => {
   try {
     const sessionId = String(req.query.session_id || '');

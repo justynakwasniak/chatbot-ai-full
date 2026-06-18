@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from "react"
 import type { Conversation, Message } from "@/lib/chat-data"
-import { conversations as mockConversations } from "@/lib/chat-data"
 import {
   createConversation,
+  fetchChatStatus,
   fetchConversationMessages,
   fetchConversations,
   sendChatMessage,
@@ -13,41 +13,57 @@ import { ChatSidebar } from "./chat-sidebar"
 import { ChatWindow } from "./chat-window"
 import { cn } from "@/lib/utils"
 
+function createLocalConversation(): Conversation {
+  return {
+    id: `${Date.now()}`,
+    title: "New chat",
+    preview: "Start typing...",
+    updatedAt: "Now",
+    messages: [],
+  }
+}
+
 export function ChatApp() {
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [activeId, setActiveId] = useState<string>("")
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [dbEnabled, setDbEnabled] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
+  const [loadError, setLoadError] = useState<string | null>(null)
 
   const active = conversations.find((c) => c.id === activeId)
 
   useEffect(() => {
     async function loadConversations() {
       try {
-        const { conversations: data, dbEnabled: hasDatabase } = await fetchConversations()
+        setLoadError(null)
+        const hasDatabase = await fetchChatStatus()
+        setDbEnabled(hasDatabase)
 
         if (!hasDatabase) {
-          setConversations(mockConversations)
-          setActiveId(mockConversations[0].id)
-          setDbEnabled(false)
+          const local = createLocalConversation()
+          setConversations([local])
+          setActiveId(local.id)
           return
         }
+
+        const { conversations: data } = await fetchConversations()
 
         if (data.length > 0) {
           setConversations(data)
           setActiveId(data[0].id)
-          setDbEnabled(true)
           return
         }
 
         const created = await createConversation()
         setConversations([created])
         setActiveId(created.id)
-        setDbEnabled(true)
-      } catch {
-        setConversations(mockConversations)
-        setActiveId(mockConversations[0].id)
+      } catch (error) {
+        console.error("Error loading conversations:", error)
+        setLoadError(error instanceof Error ? error.message : "Failed to load conversations")
+        const local = createLocalConversation()
+        setConversations([local])
+        setActiveId(local.id)
         setDbEnabled(false)
       } finally {
         setIsLoading(false)
@@ -58,6 +74,8 @@ export function ChatApp() {
   }, [])
 
   async function handleSend(text: string) {
+    if (!activeId) return
+
     const now = new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })
 
     const newMessage: Message = {
@@ -76,7 +94,7 @@ export function ChatApp() {
     )
 
     try {
-      const data = await sendChatMessage(activeId, text)
+      const data = await sendChatMessage(activeId, text, dbEnabled)
 
       const aiMessage: Message = {
         id: data.data?.id || `${Date.now()}-ai`,
@@ -113,16 +131,7 @@ export function ChatApp() {
 
   async function handleNewChat() {
     try {
-      const fresh = dbEnabled
-        ? await createConversation()
-        : {
-            id: `${Date.now()}`,
-            title: "New chat",
-            preview: "Start typing...",
-            updatedAt: "Now",
-            messages: [],
-          }
-
+      const fresh = dbEnabled ? await createConversation() : createLocalConversation()
       setConversations((prev) => [fresh, ...prev])
       setActiveId(fresh.id)
       setSidebarOpen(false)
@@ -160,6 +169,12 @@ export function ChatApp() {
 
   return (
     <div className="relative flex h-dvh overflow-hidden bg-background">
+      {loadError && (
+        <div className="absolute left-0 right-0 top-0 z-20 border-b border-destructive/30 bg-destructive/10 px-4 py-2 text-center text-xs text-destructive">
+          Database unavailable — running in local-only mode. ({loadError})
+        </div>
+      )}
+
       <div
         aria-hidden
         className="pointer-events-none absolute -left-32 -top-32 size-96 rounded-full bg-primary/10 blur-[120px]"

@@ -19,6 +19,12 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
   return data;
 }
 
+export async function fetchChatStatus(): Promise<boolean> {
+  const response = await fetch(`${API_URL}/api/chat/status`);
+  const data = await response.json();
+  return Boolean(data.success && data.dbEnabled);
+}
+
 export async function fetchConversations(): Promise<{ conversations: Conversation[]; dbEnabled: boolean }> {
   const sessionId = getOrCreateSessionId();
   const response = await fetch(
@@ -53,7 +59,7 @@ export async function fetchConversationMessages(conversationId: string): Promise
   return data.data;
 }
 
-export async function sendChatMessage(conversationId: string, message: string) {
+export async function sendChatMessage(conversationId: string, message: string, dbEnabled: boolean) {
   const sessionId = getOrCreateSessionId();
   return request<{
     success: true;
@@ -68,8 +74,9 @@ export async function sendChatMessage(conversationId: string, message: string) {
     method: 'POST',
     body: JSON.stringify({
       message,
-      conversation_id: conversationId,
-      session_id: sessionId,
+      ...(dbEnabled
+        ? { conversation_id: conversationId, session_id: sessionId }
+        : {}),
     }),
   });
 }
