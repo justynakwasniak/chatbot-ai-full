@@ -40,7 +40,7 @@ export function ChatInput({ onSend }: ChatInputProps) {
         <div className="glass-strong flex items-end gap-2 rounded-2xl border border-border p-2 shadow-xl shadow-black/20 focus-within:ring-1 focus-within:ring-primary/40">
           <button
             className="flex size-9 shrink-0 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-            aria-label="Załącz plik"
+            aria-label="Attach file"
           >
             <Paperclip className="size-5" />
           </button>
@@ -52,13 +52,13 @@ export function ChatInput({ onSend }: ChatInputProps) {
             onInput={handleInput}
             onKeyDown={handleKeyDown}
             rows={1}
-            placeholder="Napisz wiadomość do HablaAI..."
+            placeholder="Message HablaAI..."
             className="max-h-40 flex-1 resize-none bg-transparent py-2 text-sm leading-relaxed text-foreground placeholder:text-muted-foreground focus:outline-none"
           />
 
           <button
             className="flex size-9 shrink-0 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-            aria-label="Nagraj wiadomość głosową"
+            aria-label="Record voice message"
           >
             <Mic className="size-5" />
           </button>
@@ -67,13 +67,13 @@ export function ChatInput({ onSend }: ChatInputProps) {
             onClick={submit}
             disabled={!value.trim()}
             className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:brightness-110 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
-            aria-label="Wyślij wiadomość"
+            aria-label="Send message"
           >
             <ArrowUp className="size-5" />
           </button>
         </div>
         <p className="mt-2 text-center text-xs text-muted-foreground">
-          HablaAI może popełniać błędy. Zweryfikuj ważne informacje.
+          HablaAI can make mistakes. Check important information.
         </p>
       </div>
     </div>

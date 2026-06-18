@@ -15,7 +15,7 @@ export function ChatApp() {
   const active = conversations.find((c) => c.id === activeId)
 
   async function handleSend(text: string) {
-    const now = new Date().toLocaleTimeString("pl-PL", { hour: "2-digit", minute: "2-digit" })
+    const now = new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })
     
     // Add user message immediately
     const newMessage: Message = {
@@ -28,7 +28,7 @@ export function ChatApp() {
     setConversations((prev) =>
       prev.map((c) =>
         c.id === activeId
-          ? { ...c, messages: [...c.messages, newMessage], preview: text, updatedAt: "Teraz" }
+          ? { ...c, messages: [...c.messages, newMessage], preview: text, updatedAt: "Now" }
           : c,
       ),
     )
@@ -49,8 +49,8 @@ export function ChatApp() {
         const aiMessage: Message = {
           id: data.data?.id || `${Date.now()}-ai`,
           role: "assistant",
-          content: data.response || data.data?.content || "Przepraszam, nie udało mi się przetworzyć Twojej wiadomości.",
-          timestamp: new Date().toLocaleTimeString("pl-PL", { hour: "2-digit", minute: "2-digit" }),
+          content: data.response || data.data?.content || "Sorry, I couldn't process your message.",
+          timestamp: new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }),
         }
 
         setConversations((prev) =>
@@ -64,8 +64,8 @@ export function ChatApp() {
         const errorMessage: Message = {
           id: `${Date.now()}-error`,
           role: "assistant",
-          content: `❌ ${data.error || "Nie udało się uzyskać odpowiedzi od AI."}`,
-          timestamp: new Date().toLocaleTimeString("pl-PL", { hour: "2-digit", minute: "2-digit" }),
+          content: `❌ ${data.error || "Couldn't get a response from AI."}`,
+          timestamp: new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }),
         }
 
         setConversations((prev) =>
@@ -82,8 +82,8 @@ export function ChatApp() {
       const errorMessage: Message = {
         id: `${Date.now()}-error`,
         role: "assistant",
-        content: "❌ Błąd połączenia z serwerem. Spróbuj ponownie.",
-        timestamp: new Date().toLocaleTimeString("pl-PL", { hour: "2-digit", minute: "2-digit" }),
+        content: "❌ Connection error. Please try again.",
+        timestamp: new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }),
       }
 
       setConversations((prev) =>
@@ -100,9 +100,9 @@ export function ChatApp() {
     const id = `${Date.now()}`
     const fresh: Conversation = {
       id,
-      title: "Nowa rozmowa",
-      preview: "Zacznij pisać...",
-      updatedAt: "Teraz",
+      title: "New chat",
+      preview: "Start typing...",
+      updatedAt: "Now",
       messages: [],
     }
     setConversations((prev) => [fresh, ...prev])

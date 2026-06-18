@@ -55,7 +55,7 @@ router.post('/message', async (req: Request, res: Response) => {
     if (!process.env.GROQ_API_KEY) {
       return res.status(500).json({
         success: false,
-        error: 'Groq API key not configured. Dodaj GROQ_API_KEY do backend/.env',
+        error: 'Groq API key not configured. Add GROQ_API_KEY to backend/.env',
       });
     }
 
@@ -82,14 +82,14 @@ router.post('/message', async (req: Request, res: Response) => {
     if (apiError.status === 401) {
       return res.status(500).json({
         success: false,
-        error: 'Nieprawidłowy klucz Groq API. Sprawdź GROQ_API_KEY w backend/.env.',
+        error: 'Invalid Groq API key. Check GROQ_API_KEY in backend/.env.',
       });
     }
 
     if (apiError.status === 429) {
       return res.status(429).json({
         success: false,
-        error: 'Limit zapytań Groq przekroczony. Spróbuj za chwilę.',
+        error: 'Groq rate limit exceeded. Please try again in a moment.',
       });
     }
 

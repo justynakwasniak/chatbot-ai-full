@@ -26,13 +26,13 @@ export function ChatWindow({ conversation, onSend, onOpenSidebar }: ChatWindowPr
         <button
           onClick={onOpenSidebar}
           className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground md:hidden"
-          aria-label="Otwórz panel boczny"
+          aria-label="Open sidebar"
         >
           <PanelLeft className="size-5" />
         </button>
         <div className="min-w-0 flex-1">
           <h1 className="truncate text-sm font-semibold text-foreground">
-            {conversation?.title ?? "Nowa rozmowa"}
+            {conversation?.title ?? "New chat"}
           </h1>
           <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <span className="size-1.5 rounded-full bg-primary" />
@@ -60,10 +60,10 @@ export function ChatWindow({ conversation, onSend, onOpenSidebar }: ChatWindowPr
 
 function EmptyState() {
   const suggestions = [
-    "Wyjaśnij mi temat w prosty sposób",
-    "Pomóż napisać e-mail",
-    "Zaproponuj pomysły na projekt",
-    "Podsumuj długi tekst",
+    "How do I say hello in Spanish?",
+    "Correct my Spanish sentence",
+    "Practice ordering food in Spanish",
+    "Quiz me on basic vocabulary",
   ]
   return (
     <div className="flex flex-col items-center gap-6 py-16 text-center">
@@ -72,10 +72,10 @@ function EmptyState() {
       </div>
       <div className="space-y-1.5">
         <h2 className="text-balance text-xl font-semibold text-foreground">
-          W czym mogę dziś pomóc?
+          What would you like to practice today?
         </h2>
         <p className="text-pretty text-sm text-muted-foreground">
-          Zadaj pytanie lub wybierz jedną z propozycji poniżej.
+          Ask a question or pick a suggestion below.
         </p>
       </div>
       <div className="grid w-full max-w-lg grid-cols-1 gap-2 sm:grid-cols-2">

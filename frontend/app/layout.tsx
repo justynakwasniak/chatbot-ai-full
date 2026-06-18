@@ -3,7 +3,7 @@ import './globals.css'
 
 export const metadata: Metadata = {
   title: 'HablaAI',
-  description: 'Twój nowoczesny asystent AI do rozmów',
+  description: 'Your AI Spanish tutor for natural conversations',
   generator: 'v0.app',
   icons: {
     icon: [
@@ -30,7 +30,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="pl" className="dark">
+    <html lang="en" className="dark">
       <body className="font-sans antialiased">
         {children}
       </body>

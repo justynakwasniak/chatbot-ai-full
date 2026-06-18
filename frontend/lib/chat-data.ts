@@ -18,21 +18,21 @@ export interface Conversation {
 export const conversations: Conversation[] = [
   {
     id: "1",
-    title: "Powitania i podstawy",
-    preview: "¡Hola! — to najprostsze powitanie...",
-    updatedAt: "Teraz",
+    title: "Greetings & basics",
+    preview: "¡Hola! — the simplest greeting...",
+    updatedAt: "Now",
     messages: [
       {
         id: "m1",
         role: "user",
-        content: "Jak powiedzieć „cześć” po hiszpańsku?",
+        content: "How do you say 'hello' in Spanish?",
         timestamp: "13:42",
       },
       {
         id: "m2",
         role: "assistant",
         content:
-          "¡Hola! — to najprostsze i najczęstsze powitanie.\n\nRano możesz powiedzieć „Buenos días”, wieczorem „Buenas noches”. Na pożegnanie: „Adiós” lub „Hasta luego”.\n\nSpróbuj teraz: jak powiedziałbyś „Dzień dobry, jak się masz?”",
+          "¡Hola! — the simplest and most common greeting.\n\nIn the morning you can say \"Buenos días\", in the evening \"Buenas noches\". To say goodbye: \"Adiós\" or \"Hasta luego\".\n\nTry now: how would you say \"Good morning, how are you?\"",
         timestamp: "13:42",
       },
       {
@@ -45,16 +45,16 @@ export const conversations: Conversation[] = [
         id: "m4",
         role: "assistant",
         content:
-          "Świetnie! ✔ „Buenos días, ¿cómo estás?” jest poprawne.\n\nPamiętaj o znaku ¿ na początku pytania. Odpowiedź: „Estoy bien, gracias”.\n\nĆwiczenie: napisz jak odpowiedziałbyś „Dobrze, dziękuję, a Ty?”",
+          "Great! ✔ \"Buenos días, ¿cómo estás?\" is correct.\n\nRemember the ¿ at the start of a question. A typical reply: \"Estoy bien, gracias\".\n\nExercise: write how you'd answer \"Fine, thanks, and you?\"",
         timestamp: "13:43",
       },
     ],
   },
   {
     id: "2",
-    title: "Czas przeszły — pretérito",
-    preview: "Mała poprawka: „Fui a la tienda ayer” ✔",
-    updatedAt: "2 godz temu",
+    title: "Past tense — pretérito",
+    preview: "Small fix: \"Fui a la tienda ayer\" ✔",
+    updatedAt: "2h ago",
     messages: [
       {
         id: "m1",
@@ -66,28 +66,28 @@ export const conversations: Conversation[] = [
         id: "m2",
         role: "assistant",
         content:
-          "Mała poprawka: „Fui a la tienda ayer” ✔\n\n„Yo” jest zbędne — w hiszpańskim często pomija się podmiot. „ir a” wymaga przyimka „a”.\n\nSpróbuj teraz użyć innego czasownika: np. „Wczoraj poszedłem do kina”.",
+          "Small fix: \"Fui a la tienda ayer\" ✔\n\n\"Yo\" is optional — in Spanish the subject is often omitted. \"ir a\" requires the preposition \"a\".\n\nTry using another verb now, e.g. \"Yesterday I went to the cinema\".",
         timestamp: "11:11",
       },
     ],
   },
   {
     id: "3",
-    title: "Słownictwo — jedzenie",
-    preview: "„La manzana” to jabłko, „el pan” to chleb...",
-    updatedAt: "Wczoraj",
+    title: "Vocabulary — food",
+    preview: "\"La manzana\" is apple, \"el pan\" is bread...",
+    updatedAt: "Yesterday",
     messages: [
       {
         id: "m1",
         role: "user",
-        content: "Jak powiedzieć jabłko, chleb i woda po hiszpańsku?",
+        content: "How do you say apple, bread and water in Spanish?",
         timestamp: "18:30",
       },
       {
         id: "m2",
         role: "assistant",
         content:
-          "„La manzana” — jabłko\n„El pan” — chleb\n„El agua” — woda (uwaga: rodzaj żeński, ale „el” zamiast „la”!)\n\nZapamiętaj: większość słów kończących się na -a to rodzaj żeński.\n\nĆwiczenie: przetłumacz „Chcę wodę i chleb”.",
+          "\"La manzana\" — apple\n\"El pan\" — bread\n\"El agua\" — water (note: feminine noun, but \"el\" instead of \"la\"!)\n\nRemember: most words ending in -a are feminine.\n\nExercise: translate \"I want water and bread\".",
         timestamp: "18:31",
       },
     ],
