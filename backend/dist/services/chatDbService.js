@@ -28,33 +28,33 @@ function formatTimestamp(isoDate) {
         minute: '2-digit',
     });
 }
-async function listConversations(sessionId) {
+async function listConversations(userId) {
     const supabase = (0, supabase_1.getSupabase)();
     if (!supabase)
         return [];
     const { data, error } = await supabase
         .from('conversations')
         .select('*')
-        .eq('session_id', sessionId)
+        .eq('user_id', userId)
         .order('updated_at', { ascending: false });
     if (error)
         throw error;
     return (data ?? []);
 }
-async function createConversation(sessionId, title = 'New chat') {
+async function createConversation(userId, title = 'New chat') {
     const supabase = (0, supabase_1.getSupabase)();
     if (!supabase)
         throw new Error('Supabase not configured');
     const { data, error } = await supabase
         .from('conversations')
-        .insert({ session_id: sessionId, title })
+        .insert({ user_id: userId, title })
         .select('*')
         .single();
     if (error)
         throw error;
     return data;
 }
-async function getConversationMessages(conversationId, sessionId) {
+async function getConversationMessages(conversationId, userId) {
     const supabase = (0, supabase_1.getSupabase)();
     if (!supabase)
         return [];
@@ -62,7 +62,7 @@ async function getConversationMessages(conversationId, sessionId) {
         .from('conversations')
         .select('id')
         .eq('id', conversationId)
-        .eq('session_id', sessionId)
+        .eq('user_id', userId)
         .single();
     if (conversationError || !conversation) {
         throw new Error('Conversation not found');
@@ -76,7 +76,7 @@ async function getConversationMessages(conversationId, sessionId) {
         throw error;
     return (data ?? []);
 }
-async function ensureConversation(sessionId, conversationId) {
+async function ensureConversation(userId, conversationId) {
     const supabase = (0, supabase_1.getSupabase)();
     if (!supabase)
         throw new Error('Supabase not configured');
@@ -85,15 +85,15 @@ async function ensureConversation(sessionId, conversationId) {
             .from('conversations')
             .select('id')
             .eq('id', conversationId)
-            .eq('session_id', sessionId)
+            .eq('user_id', userId)
             .maybeSingle();
         if (data?.id)
             return data.id;
     }
-    const created = await createConversation(sessionId);
+    const created = await createConversation(userId);
     return created.id;
 }
-async function addMessage(conversationId, sessionId, role, content) {
+async function addMessage(conversationId, userId, role, content) {
     const supabase = (0, supabase_1.getSupabase)();
     if (!supabase)
         throw new Error('Supabase not configured');
@@ -101,7 +101,7 @@ async function addMessage(conversationId, sessionId, role, content) {
         .from('conversations')
         .select('id, title')
         .eq('id', conversationId)
-        .eq('session_id', sessionId)
+        .eq('user_id', userId)
         .single();
     if (conversationError || !conversation) {
         throw new Error('Conversation not found');

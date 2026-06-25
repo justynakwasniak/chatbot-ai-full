@@ -2,7 +2,7 @@ import { getSupabase } from '../config/supabase';
 
 export interface DbConversation {
   id: string;
-  session_id: string;
+  user_id: string;
   title: string;
   preview: string;
   created_at: string;
@@ -36,27 +36,27 @@ function formatTimestamp(isoDate: string): string {
   });
 }
 
-export async function listConversations(sessionId: string) {
+export async function listConversations(userId: string) {
   const supabase = getSupabase();
   if (!supabase) return [];
 
   const { data, error } = await supabase
     .from('conversations')
     .select('*')
-    .eq('session_id', sessionId)
+    .eq('user_id', userId)
     .order('updated_at', { ascending: false });
 
   if (error) throw error;
   return (data ?? []) as DbConversation[];
 }
 
-export async function createConversation(sessionId: string, title = 'New chat') {
+export async function createConversation(userId: string, title = 'New chat') {
   const supabase = getSupabase();
   if (!supabase) throw new Error('Supabase not configured');
 
   const { data, error } = await supabase
     .from('conversations')
-    .insert({ session_id: sessionId, title })
+    .insert({ user_id: userId, title })
     .select('*')
     .single();
 
@@ -64,7 +64,7 @@ export async function createConversation(sessionId: string, title = 'New chat') 
   return data as DbConversation;
 }
 
-export async function getConversationMessages(conversationId: string, sessionId: string) {
+export async function getConversationMessages(conversationId: string, userId: string) {
   const supabase = getSupabase();
   if (!supabase) return [];
 
@@ -72,7 +72,7 @@ export async function getConversationMessages(conversationId: string, sessionId:
     .from('conversations')
     .select('id')
     .eq('id', conversationId)
-    .eq('session_id', sessionId)
+    .eq('user_id', userId)
     .single();
 
   if (conversationError || !conversation) {
@@ -89,7 +89,7 @@ export async function getConversationMessages(conversationId: string, sessionId:
   return (data ?? []) as DbMessage[];
 }
 
-export async function ensureConversation(sessionId: string, conversationId?: string): Promise<string> {
+export async function ensureConversation(userId: string, conversationId?: string): Promise<string> {
   const supabase = getSupabase();
   if (!supabase) throw new Error('Supabase not configured');
 
@@ -98,19 +98,19 @@ export async function ensureConversation(sessionId: string, conversationId?: str
       .from('conversations')
       .select('id')
       .eq('id', conversationId)
-      .eq('session_id', sessionId)
+      .eq('user_id', userId)
       .maybeSingle();
 
     if (data?.id) return data.id;
   }
 
-  const created = await createConversation(sessionId);
+  const created = await createConversation(userId);
   return created.id;
 }
 
 export async function addMessage(
   conversationId: string,
-  sessionId: string,
+  userId: string,
   role: 'user' | 'assistant',
   content: string,
 ) {
@@ -121,7 +121,7 @@ export async function addMessage(
     .from('conversations')
     .select('id, title')
     .eq('id', conversationId)
-    .eq('session_id', sessionId)
+    .eq('user_id', userId)
     .single();
 
   if (conversationError || !conversation) {

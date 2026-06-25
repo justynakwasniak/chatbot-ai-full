@@ -1,7 +1,18 @@
 import type { Conversation } from '@/lib/chat-data';
-import { getOrCreateSessionId } from '@/lib/session';
+import { getAccessToken } from '@/lib/supabase-client';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+
+async function authHeaders(): Promise<HeadersInit> {
+  const token = await getAccessToken();
+  if (!token) {
+    throw new Error('Not signed in. Please sign in again.');
+  }
+  return {
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${token}`,
+  };
+}
 
 async function fetchWithRetry(url: string, init?: RequestInit, retries = 3): Promise<Response> {
   let lastError: unknown;
@@ -28,10 +39,11 @@ async function fetchWithRetry(url: string, init?: RequestInit, retries = 3): Pro
 }
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
+  const headers = await authHeaders();
   const response = await fetchWithRetry(`${API_URL}${path}`, {
     ...options,
     headers: {
-      'Content-Type': 'application/json',
+      ...headers,
       ...(options?.headers ?? {}),
     },
   });
@@ -49,42 +61,27 @@ export async function fetchChatStatus(): Promise<boolean> {
   return Boolean(data.success && data.dbEnabled);
 }
 
-export async function fetchConversations(): Promise<{ conversations: Conversation[]; dbEnabled: boolean }> {
-  const sessionId = getOrCreateSessionId();
-  const response = await fetchWithRetry(
-    `${API_URL}/api/chat/conversations?session_id=${encodeURIComponent(sessionId)}`,
-  );
-  const data = await response.json();
-
-  if (!response.ok || !data.success) {
-    throw new Error(data.error || 'Request failed');
-  }
-
-  return {
-    conversations: data.data,
-    dbEnabled: Boolean(data.dbEnabled),
-  };
+export async function fetchConversations(): Promise<Conversation[]> {
+  const data = await request<{ success: true; data: Conversation[] }>('/api/chat/conversations');
+  return data.data;
 }
 
 export async function createConversation(): Promise<Conversation> {
-  const sessionId = getOrCreateSessionId();
   const data = await request<{ success: true; data: Conversation }>('/api/chat/conversations', {
     method: 'POST',
-    body: JSON.stringify({ session_id: sessionId }),
+    body: JSON.stringify({}),
   });
   return data.data;
 }
 
 export async function fetchConversationMessages(conversationId: string): Promise<Conversation> {
-  const sessionId = getOrCreateSessionId();
   const data = await request<{ success: true; data: Conversation }>(
-    `/api/chat/conversations/${conversationId}?session_id=${encodeURIComponent(sessionId)}`,
+    `/api/chat/conversations/${conversationId}`,
   );
   return data.data;
 }
 
 export async function sendChatMessage(conversationId: string, message: string) {
-  const sessionId = getOrCreateSessionId();
   return request<{
     success: true;
     response: string;
@@ -100,7 +97,6 @@ export async function sendChatMessage(conversationId: string, message: string) {
     body: JSON.stringify({
       message,
       conversation_id: conversationId,
-      session_id: sessionId,
     }),
   });
 }

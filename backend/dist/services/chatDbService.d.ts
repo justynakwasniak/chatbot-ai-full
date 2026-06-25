@@ -1,6 +1,6 @@
 export interface DbConversation {
     id: string;
-    session_id: string;
+    user_id: string;
     title: string;
     preview: string;
     created_at: string;
@@ -13,11 +13,11 @@ export interface DbMessage {
     content: string;
     created_at: string;
 }
-export declare function listConversations(sessionId: string): Promise<DbConversation[]>;
-export declare function createConversation(sessionId: string, title?: string): Promise<DbConversation>;
-export declare function getConversationMessages(conversationId: string, sessionId: string): Promise<DbMessage[]>;
-export declare function ensureConversation(sessionId: string, conversationId?: string): Promise<string>;
-export declare function addMessage(conversationId: string, sessionId: string, role: 'user' | 'assistant', content: string): Promise<DbMessage>;
+export declare function listConversations(userId: string): Promise<DbConversation[]>;
+export declare function createConversation(userId: string, title?: string): Promise<DbConversation>;
+export declare function getConversationMessages(conversationId: string, userId: string): Promise<DbMessage[]>;
+export declare function ensureConversation(userId: string, conversationId?: string): Promise<string>;
+export declare function addMessage(conversationId: string, userId: string, role: 'user' | 'assistant', content: string): Promise<DbMessage>;
 export declare function mapConversationForApi(conversation: DbConversation, messages?: DbMessage[]): {
     id: string;
     title: string;

@@ -1,4 +1,5 @@
 import { Router, Request, Response } from 'express';
+import { requireAuth } from '../middleware/auth';
 import { isSupabaseConfigured } from '../config/supabase';
 import {
   addMessage,
@@ -16,25 +17,24 @@ router.get('/status', (req: Request, res: Response) => {
   res.json({
     success: true,
     dbEnabled: isSupabaseConfigured(),
+    authRequired: true,
   });
 });
 
+router.use(requireAuth);
+
 router.get('/conversations', async (req: Request, res: Response) => {
   try {
-    const sessionId = String(req.query.session_id || '');
-
-    if (!sessionId) {
-      return res.status(400).json({ success: false, error: 'session_id is required' });
-    }
+    const userId = req.userId!;
 
     if (!isSupabaseConfigured()) {
-      return res.json({ success: true, data: [], dbEnabled: false });
+      return res.status(503).json({ success: false, error: 'Database not configured' });
     }
 
-    const conversations = await listConversations(sessionId);
+    const conversations = await listConversations(userId);
     const data = conversations.map((conversation) => mapConversationForApi(conversation));
 
-    res.json({ success: true, data, dbEnabled: true });
+    res.json({ success: true, data });
   } catch (error) {
     console.error('List conversations error:', error);
     res.status(500).json({ success: false, error: 'Failed to fetch conversations' });
@@ -43,17 +43,14 @@ router.get('/conversations', async (req: Request, res: Response) => {
 
 router.post('/conversations', async (req: Request, res: Response) => {
   try {
-    const { session_id: sessionId, title } = req.body;
-
-    if (!sessionId) {
-      return res.status(400).json({ success: false, error: 'session_id is required' });
-    }
+    const userId = req.userId!;
+    const { title } = req.body;
 
     if (!isSupabaseConfigured()) {
       return res.status(503).json({ success: false, error: 'Database not configured' });
     }
 
-    const conversation = await createConversation(sessionId, title);
+    const conversation = await createConversation(userId, title);
     res.status(201).json({
       success: true,
       data: mapConversationForApi(conversation),
@@ -74,25 +71,21 @@ router.post('/conversations', async (req: Request, res: Response) => {
 
 router.get('/conversations/:id', async (req: Request, res: Response) => {
   try {
-    const sessionId = String(req.query.session_id || '');
+    const userId = req.userId!;
     const { id } = req.params;
-
-    if (!sessionId) {
-      return res.status(400).json({ success: false, error: 'session_id is required' });
-    }
 
     if (!isSupabaseConfigured()) {
       return res.status(503).json({ success: false, error: 'Database not configured' });
     }
 
-    const conversations = await listConversations(sessionId);
+    const conversations = await listConversations(userId);
     const conversation = conversations.find((item) => item.id === id);
 
     if (!conversation) {
       return res.status(404).json({ success: false, error: 'Conversation not found' });
     }
 
-    const messages = await getConversationMessages(id, sessionId);
+    const messages = await getConversationMessages(id, userId);
 
     res.json({
       success: true,
@@ -106,7 +99,8 @@ router.get('/conversations/:id', async (req: Request, res: Response) => {
 
 router.post('/message', async (req: Request, res: Response) => {
   try {
-    const { message, conversation_id: conversationId, session_id: sessionId } = req.body;
+    const userId = req.userId!;
+    const { message, conversation_id: conversationId } = req.body;
 
     if (!message) {
       return res.status(400).json({ success: false, error: 'Message is required' });
@@ -119,40 +113,22 @@ router.post('/message', async (req: Request, res: Response) => {
       });
     }
 
-    if (isSupabaseConfigured()) {
-      if (!sessionId) {
-        return res.status(400).json({
-          success: false,
-          error: 'session_id is required when database is enabled',
-        });
-      }
-
-      const resolvedConversationId = await ensureConversation(sessionId, conversationId);
-      await addMessage(resolvedConversationId, sessionId, 'user', message);
-
-      const teacherResponse = await getTeacherResponse(message);
-      const savedMessage = await addMessage(resolvedConversationId, sessionId, 'assistant', teacherResponse);
-
-      return res.json({
-        success: true,
-        response: teacherResponse,
-        conversation_id: resolvedConversationId,
-        data: {
-          id: savedMessage.id,
-          content: teacherResponse,
-          sender: 'ai',
-          timestamp: new Date().toISOString(),
-        },
-      });
+    if (!isSupabaseConfigured()) {
+      return res.status(503).json({ success: false, error: 'Database not configured' });
     }
 
+    const resolvedConversationId = await ensureConversation(userId, conversationId);
+    await addMessage(resolvedConversationId, userId, 'user', message);
+
     const teacherResponse = await getTeacherResponse(message);
+    const savedMessage = await addMessage(resolvedConversationId, userId, 'assistant', teacherResponse);
 
     res.json({
       success: true,
       response: teacherResponse,
+      conversation_id: resolvedConversationId,
       data: {
-        id: Math.random().toString(36).slice(2, 11),
+        id: savedMessage.id,
         content: teacherResponse,
         sender: 'ai',
         timestamp: new Date().toISOString(),

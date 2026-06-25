@@ -2,7 +2,7 @@
 
 create table if not exists conversations (
   id uuid primary key default gen_random_uuid(),
-  session_id text not null,
+  user_id uuid not null references auth.users(id) on delete cascade,
   title text not null default 'New chat',
   preview text not null default 'Start typing...',
   created_at timestamptz not null default now(),
@@ -17,13 +17,12 @@ create table if not exists messages (
   created_at timestamptz not null default now()
 );
 
-create index if not exists idx_conversations_session_id on conversations(session_id);
+create index if not exists idx_conversations_user_id on conversations(user_id);
 create index if not exists idx_conversations_updated_at on conversations(updated_at desc);
 create index if not exists idx_messages_conversation_id on messages(conversation_id);
 
--- Security: enable RLS (backend must use service_role key — it bypasses RLS)
 alter table conversations enable row level security;
 alter table messages enable row level security;
 
--- No public policies = anon/publishable keys cannot access these tables.
--- Backend uses SUPABASE_KEY=service_role from Project Settings → API Keys.
+-- Backend uses service_role key and bypasses RLS.
+-- Enable Email provider in Supabase: Authentication → Providers → Email.

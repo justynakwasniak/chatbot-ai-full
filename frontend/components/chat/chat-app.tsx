@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import type { Session } from "@supabase/supabase-js"
 import type { Conversation, Message } from "@/lib/chat-data"
 import {
   createConversation,
@@ -8,43 +9,57 @@ import {
   fetchConversations,
   sendChatMessage,
 } from "@/lib/chat-api"
+import { getSupabase } from "@/lib/supabase-client"
+import { LoginForm } from "@/components/auth/login-form"
 import { ChatSidebar } from "./chat-sidebar"
 import { ChatWindow } from "./chat-window"
 import { cn } from "@/lib/utils"
 
-function createLocalConversation(): Conversation {
-  return {
-    id: `${Date.now()}`,
-    title: "New chat",
-    preview: "Start typing...",
-    updatedAt: "Now",
-    messages: [],
-  }
-}
-
 export function ChatApp() {
+  const [session, setSession] = useState<Session | null>(null)
+  const [authReady, setAuthReady] = useState(false)
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [activeId, setActiveId] = useState<string>("")
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [dbEnabled, setDbEnabled] = useState(false)
-  const [isLoading, setIsLoading] = useState(true)
+  const [isLoading, setIsLoading] = useState(false)
   const [loadError, setLoadError] = useState<string | null>(null)
 
   const active = conversations.find((c) => c.id === activeId)
 
   useEffect(() => {
+    try {
+      const supabase = getSupabase()
+      supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
+        setSession(currentSession)
+        setAuthReady(true)
+      })
+
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, currentSession) => {
+        setSession(currentSession)
+      })
+
+      return () => subscription.unsubscribe()
+    } catch (error) {
+      console.error(error)
+      setLoadError(error instanceof Error ? error.message : "Auth configuration error")
+      setAuthReady(true)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!session) {
+      setConversations([])
+      setActiveId("")
+      setLoadError(null)
+      setIsLoading(false)
+      return
+    }
+
     async function loadConversations() {
+      setIsLoading(true)
       try {
         setLoadError(null)
-        const { conversations: data, dbEnabled: hasDatabase } = await fetchConversations()
-        setDbEnabled(hasDatabase)
-
-        if (!hasDatabase) {
-          const local = createLocalConversation()
-          setConversations([local])
-          setActiveId(local.id)
-          return
-        }
+        const data = await fetchConversations()
 
         if (data.length > 0) {
           setConversations(data)
@@ -64,17 +79,13 @@ export function ChatApp() {
               : error.message
             : "Failed to load conversations",
         )
-        const local = createLocalConversation()
-        setConversations([local])
-        setActiveId(local.id)
-        setDbEnabled(false)
       } finally {
         setIsLoading(false)
       }
     }
 
     loadConversations()
-  }, [])
+  }, [session])
 
   async function handleSend(text: string) {
     if (!activeId) return
@@ -139,7 +150,7 @@ export function ChatApp() {
 
   async function handleNewChat() {
     try {
-      const fresh = dbEnabled ? await createConversation() : createLocalConversation()
+      const fresh = await createConversation()
       setConversations((prev) => [fresh, ...prev])
       setActiveId(fresh.id)
       setSidebarOpen(false)
@@ -151,8 +162,6 @@ export function ChatApp() {
   async function handleSelect(id: string) {
     setActiveId(id)
     setSidebarOpen(false)
-
-    if (!dbEnabled) return
 
     const selected = conversations.find((conversation) => conversation.id === id)
     if (!selected || selected.messages.length > 0) return
@@ -167,6 +176,22 @@ export function ChatApp() {
     }
   }
 
+  async function handleLogout() {
+    await getSupabase().auth.signOut()
+  }
+
+  if (!authReady) {
+    return (
+      <div className="flex h-dvh items-center justify-center bg-background text-sm text-muted-foreground">
+        Loading...
+      </div>
+    )
+  }
+
+  if (!session) {
+    return <LoginForm />
+  }
+
   if (isLoading) {
     return (
       <div className="flex h-dvh items-center justify-center bg-background text-sm text-muted-foreground">
@@ -174,6 +199,9 @@ export function ChatApp() {
       </div>
     )
   }
+
+  const userEmail = session.user.email ?? "User"
+  const userInitials = userEmail.slice(0, 2).toUpperCase()
 
   return (
     <div className="relative flex h-dvh overflow-hidden bg-background">
@@ -198,6 +226,9 @@ export function ChatApp() {
           activeId={activeId}
           onSelect={handleSelect}
           onNewChat={handleNewChat}
+          userEmail={userEmail}
+          userInitials={userInitials}
+          onLogout={handleLogout}
         />
       </div>
 
@@ -226,6 +257,9 @@ export function ChatApp() {
             onSelect={handleSelect}
             onNewChat={handleNewChat}
             onClose={() => setSidebarOpen(false)}
+            userEmail={userEmail}
+            userInitials={userInitials}
+            onLogout={handleLogout}
           />
         </div>
       </div>
