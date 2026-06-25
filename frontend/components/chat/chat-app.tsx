@@ -73,11 +73,7 @@ export function ChatApp() {
       } catch (error) {
         console.error("Error loading conversations:", error)
         setLoadError(
-          error instanceof Error
-            ? error.message.includes('fetch') || error.message.includes('reach backend')
-              ? `Cannot reach backend. On Vercel set NEXT_PUBLIC_API_URL to your Render URL, then redeploy.`
-              : error.message
-            : "Failed to load conversations",
+          error instanceof Error ? error.message : "Failed to load conversations",
         )
       } finally {
         setIsLoading(false)
