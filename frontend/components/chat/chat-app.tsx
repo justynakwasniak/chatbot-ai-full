@@ -57,7 +57,13 @@ export function ChatApp() {
         setActiveId(created.id)
       } catch (error) {
         console.error("Error loading conversations:", error)
-        setLoadError(error instanceof Error ? error.message : "Failed to load conversations")
+        setLoadError(
+          error instanceof Error
+            ? error.message.includes('fetch') || error.message.includes('reach backend')
+              ? `Cannot reach backend. On Vercel set NEXT_PUBLIC_API_URL to your Render URL, then redeploy.`
+              : error.message
+            : "Failed to load conversations",
+        )
         const local = createLocalConversation()
         setConversations([local])
         setActiveId(local.id)
@@ -173,7 +179,7 @@ export function ChatApp() {
     <div className="relative flex h-dvh overflow-hidden bg-background">
       {loadError && (
         <div className="absolute left-0 right-0 top-0 z-20 border-b border-destructive/30 bg-destructive/10 px-4 py-2 text-center text-xs text-destructive">
-          Database unavailable — running in local-only mode. ({loadError})
+          {loadError}
         </div>
       )}
 

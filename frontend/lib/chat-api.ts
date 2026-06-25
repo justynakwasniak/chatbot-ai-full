@@ -3,8 +3,32 @@ import { getOrCreateSessionId } from '@/lib/session';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
+async function fetchWithRetry(url: string, init?: RequestInit, retries = 3): Promise<Response> {
+  let lastError: unknown;
+
+  for (let attempt = 0; attempt < retries; attempt++) {
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 45000);
+
+      const response = await fetch(url, { ...init, signal: controller.signal });
+      clearTimeout(timeout);
+      return response;
+    } catch (error) {
+      lastError = error;
+      if (attempt < retries - 1) {
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+      }
+    }
+  }
+
+  throw lastError instanceof Error
+    ? lastError
+    : new Error(`Cannot reach backend at ${API_URL}. Check NEXT_PUBLIC_API_URL on Vercel.`);
+}
+
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
-  const response = await fetch(`${API_URL}${path}`, {
+  const response = await fetchWithRetry(`${API_URL}${path}`, {
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -27,7 +51,7 @@ export async function fetchChatStatus(): Promise<boolean> {
 
 export async function fetchConversations(): Promise<{ conversations: Conversation[]; dbEnabled: boolean }> {
   const sessionId = getOrCreateSessionId();
-  const response = await fetch(
+  const response = await fetchWithRetry(
     `${API_URL}/api/chat/conversations?session_id=${encodeURIComponent(sessionId)}`,
   );
   const data = await response.json();

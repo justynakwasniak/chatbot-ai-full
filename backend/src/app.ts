@@ -17,6 +17,11 @@ app.use(cors({
     if (!origin) return callback(null, true);
     if (allowedOrigins.includes(origin)) return callback(null, true);
     if (origin.endsWith('.vercel.app')) return callback(null, true);
+    // Allow custom domains configured in FRONTEND_URL (e.g. your own domain on Vercel)
+    if (process.env.FRONTEND_URL && origin === process.env.FRONTEND_URL) {
+      return callback(null, true);
+    }
+    console.warn(`CORS blocked origin: ${origin}`);
     callback(new Error(`CORS blocked: ${origin}`));
   },
   credentials: true,
