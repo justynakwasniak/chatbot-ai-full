@@ -47,7 +47,7 @@ export function ChatWindow({ conversation, onSend, onOpenSidebar }: ChatWindowPr
           {conversation && conversation.messages.length > 0 ? (
             conversation.messages.map((m: Message) => <ChatMessage key={m.id} message={m} />)
           ) : (
-            <EmptyState />
+            <EmptyState onSend={onSend} />
           )}
         </div>
       </div>
@@ -58,7 +58,7 @@ export function ChatWindow({ conversation, onSend, onOpenSidebar }: ChatWindowPr
   )
 }
 
-function EmptyState() {
+function EmptyState({ onSend }: { onSend: (text: string) => void }) {
   const suggestions = [
     "How do I say hello in Spanish?",
     "Correct my Spanish sentence",
@@ -82,7 +82,9 @@ function EmptyState() {
         {suggestions.map((s) => (
           <button
             key={s}
-            className="glass rounded-xl border border-border px-4 py-3 text-left text-sm text-foreground/90 transition-colors hover:border-primary/40 hover:text-foreground"
+            type="button"
+            onClick={() => onSend(s)}
+            className="glass rounded-xl border border-border px-4 py-3 text-left text-sm text-foreground/90 transition-colors hover:border-primary/40 hover:bg-primary/5 hover:text-foreground active:scale-[0.98]"
           >
             {s}
           </button>

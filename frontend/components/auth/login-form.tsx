@@ -20,8 +20,9 @@ export function LoginForm() {
 
     try {
       if (isSignUp) {
-        const { error: signUpError } = await getSupabase().auth.signUp({ email, password })
+        const { data, error: signUpError } = await getSupabase().auth.signUp({ email, password })
         if (signUpError) throw signUpError
+        if (data.session) return
         setMessage("Account created. You can sign in now.")
         setIsSignUp(false)
       } else {
@@ -46,6 +47,9 @@ export function LoginForm() {
           <p className="text-sm text-muted-foreground">
             Sign in to practice Spanish with your AI tutor
           </p>
+          <p className="text-xs text-muted-foreground/80">
+            Demo app — any email works, no confirmation needed
+          </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -59,8 +63,8 @@ export function LoginForm() {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-lg border border-border bg-secondary/40 px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
-              placeholder="you@example.com"
+              className="auth-input w-full rounded-lg border border-border bg-secondary/40 px-3 py-2.5 text-base caret-primary placeholder:text-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40"
+              placeholder="name@gmail.com"
             />
           </div>
 
@@ -75,7 +79,7 @@ export function LoginForm() {
               minLength={6}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-lg border border-border bg-secondary/40 px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
+              className="auth-input auth-input-password w-full rounded-lg border border-border bg-secondary/40 px-3 py-2.5 text-base caret-primary placeholder:text-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40"
               placeholder="••••••••"
             />
           </div>
