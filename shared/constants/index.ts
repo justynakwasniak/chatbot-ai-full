@@ -1,8 +1,6 @@
 // API Constants
 export const API_ENDPOINTS = {
-  TASKS: '/api/tasks',
   CHAT: '/api/chat',
-  AUTH: '/api/auth',
 } as const;
 
 // Task Status

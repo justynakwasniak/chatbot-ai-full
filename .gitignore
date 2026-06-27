@@ -6,9 +6,9 @@ node_modules/
 # Testing
 /coverage
 
-# Production
-/build
-/dist
+# Production build output (Render/Vercel build locally — do not commit)
+dist/
+build/
 .next/
 out/
 

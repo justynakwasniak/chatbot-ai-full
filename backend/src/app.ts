@@ -1,7 +1,6 @@
 import express, { Express, Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import 'dotenv/config';
-import taskRoutes from './routes/taskRoutes';
 import chatRoutes from './routes/chatRoutes';
 import { isProduction, logServerError, USER_ERRORS } from './utils/apiErrors';
 
@@ -40,9 +39,6 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 app.get('/health', (req: Request, res: Response) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
 });
-
-// Task routes
-app.use('/api/tasks', taskRoutes);
 
 // Chat routes
 app.use('/api/chat', chatRoutes);
