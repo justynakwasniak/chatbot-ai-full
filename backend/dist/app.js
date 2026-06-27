@@ -9,23 +9,21 @@ require("dotenv/config");
 const taskRoutes_1 = __importDefault(require("./routes/taskRoutes"));
 const chatRoutes_1 = __importDefault(require("./routes/chatRoutes"));
 const app = (0, express_1.default)();
-// Middleware
+function normalizeOrigin(url) {
+    return url.replace(/\/$/, '');
+}
 const allowedOrigins = [
     'http://localhost:3000',
     process.env.FRONTEND_URL,
-].filter((origin) => Boolean(origin));
+]
+    .filter((origin) => Boolean(origin))
+    .map(normalizeOrigin);
 app.use((0, cors_1.default)({
     origin(origin, callback) {
         if (!origin)
             return callback(null, true);
-        if (allowedOrigins.includes(origin))
+        if (allowedOrigins.includes(normalizeOrigin(origin)))
             return callback(null, true);
-        if (origin.endsWith('.vercel.app'))
-            return callback(null, true);
-        // Allow custom domains configured in FRONTEND_URL (e.g. your own domain on Vercel)
-        if (process.env.FRONTEND_URL && origin === process.env.FRONTEND_URL) {
-            return callback(null, true);
-        }
         console.warn(`CORS blocked origin: ${origin}`);
         callback(new Error(`CORS blocked: ${origin}`));
     },
