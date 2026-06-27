@@ -20,7 +20,7 @@ export function ChatWindow({ conversation, onSend, onOpenSidebar }: ChatWindowPr
   }, [conversation?.messages.length, conversation?.id])
 
   return (
-    <div className="flex h-full min-w-0 flex-1 flex-col">
+    <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col">
       {/* Header */}
       <header className="glass flex items-center gap-3 border-b border-border px-4 py-3 sm:px-6">
         <button
@@ -42,7 +42,7 @@ export function ChatWindow({ conversation, onSend, onOpenSidebar }: ChatWindowPr
       </header>
 
       {/* Messages */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto overscroll-contain">
+      <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
         <div className="mx-auto flex max-w-3xl flex-col gap-6 px-4 py-6 sm:px-6">
           {conversation && conversation.messages.length > 0 ? (
             conversation.messages.map((m: Message) => <ChatMessage key={m.id} message={m} />)

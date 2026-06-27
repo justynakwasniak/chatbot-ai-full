@@ -2,15 +2,7 @@
 
 import { useEffect, useState } from 'react';
 
-export function scrollFocusedIntoView(element: HTMLElement) {
-  if (!window.matchMedia('(max-width: 768px)').matches) return;
-
-  setTimeout(() => {
-    element.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'smooth' });
-  }, 300);
-}
-
-function useIsMobileLayout() {
+export function useIsMobileLayout() {
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
@@ -28,35 +20,49 @@ function useIsMobileLayout() {
   return isMobile;
 }
 
-export function useKeyboardInset() {
+export function scrollFocusedIntoView(element: HTMLElement) {
+  if (!window.matchMedia('(max-width: 768px)').matches) return;
+
+  const scroll = () => {
+    element.scrollIntoView({ block: 'end', inline: 'nearest' });
+  };
+
+  scroll();
+  setTimeout(scroll, 150);
+  setTimeout(scroll, 400);
+}
+
+/** Distance from bottom of layout viewport to bottom of visible viewport (keyboard height). */
+export function useVisualViewportBottom() {
   const isMobile = useIsMobileLayout();
-  const [inset, setInset] = useState(0);
+  const [bottomOffset, setBottomOffset] = useState(0);
 
   useEffect(() => {
     if (!isMobile) {
-      setInset(0);
+      setBottomOffset(0);
       return;
     }
 
     const viewport = window.visualViewport;
     if (!viewport) return;
 
-    function updateInset() {
+    function updateOffset() {
       const vv = window.visualViewport;
       if (!vv) return;
-      const covered = window.innerHeight - vv.height - vv.offsetTop;
-      setInset(Math.max(0, covered));
+      setBottomOffset(Math.max(0, window.innerHeight - vv.offsetTop - vv.height));
     }
 
-    updateInset();
-    viewport.addEventListener('resize', updateInset);
-    viewport.addEventListener('scroll', updateInset);
+    updateOffset();
+    viewport.addEventListener('resize', updateOffset);
+    viewport.addEventListener('scroll', updateOffset);
+    window.addEventListener('orientationchange', updateOffset);
 
     return () => {
-      viewport.removeEventListener('resize', updateInset);
-      viewport.removeEventListener('scroll', updateInset);
+      viewport.removeEventListener('resize', updateOffset);
+      viewport.removeEventListener('scroll', updateOffset);
+      window.removeEventListener('orientationchange', updateOffset);
     };
   }, [isMobile]);
 
-  return isMobile ? inset : 0;
+  return { isMobile, bottomOffset };
 }
