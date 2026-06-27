@@ -200,7 +200,7 @@ export function ChatApp() {
   const userInitials = userEmail.slice(0, 2).toUpperCase()
 
   return (
-    <div className="relative flex h-dvh max-h-dvh flex-col overflow-hidden bg-background">
+    <div className="relative flex h-dvh overflow-hidden bg-background">
       {loadError && (
         <div className="absolute left-0 right-0 top-0 z-20 border-b border-destructive/30 bg-destructive/10 px-4 py-2 text-center text-xs text-destructive">
           {loadError}

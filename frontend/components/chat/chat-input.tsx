@@ -42,12 +42,8 @@ export function ChatInput({ onSend }: ChatInputProps) {
 
   return (
     <div
-      className="shrink-0 px-4 pt-2 sm:px-6"
-      style={{
-        paddingBottom: keyboardInset > 0
-          ? `${keyboardInset + 8}px`
-          : "max(1rem, env(safe-area-inset-bottom))",
-      }}
+      className="shrink-0 px-4 pb-4 pt-2 sm:px-6"
+      style={keyboardInset > 0 ? { paddingBottom: `${keyboardInset + 8}px` } : undefined}
     >
       <div className="mx-auto max-w-3xl">
         <div className="glass-strong flex items-end gap-2 rounded-2xl border border-border p-2 shadow-xl shadow-black/20 focus-within:ring-1 focus-within:ring-primary/40">
