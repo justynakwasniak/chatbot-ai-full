@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { Sparkles } from "lucide-react"
 import { getSupabase } from "@/lib/supabase-client"
+import { scrollFocusedIntoView } from "@/lib/mobile-keyboard"
 
 export function LoginForm() {
   const [email, setEmail] = useState("")
@@ -37,8 +38,8 @@ export function LoginForm() {
   }
 
   return (
-    <div className="flex min-h-dvh items-center justify-center bg-background px-4">
-      <div className="glass-strong w-full max-w-md rounded-2xl border border-border p-8 shadow-xl">
+    <div className="min-h-dvh overflow-y-auto bg-background px-4 py-8 sm:flex sm:min-h-dvh sm:items-center sm:justify-center sm:py-4">
+      <div className="glass-strong mx-auto w-full max-w-md rounded-2xl border border-border p-8 shadow-xl">
         <div className="mb-6 flex flex-col items-center gap-3 text-center">
           <div className="flex size-12 items-center justify-center rounded-xl bg-primary/15 text-primary ring-1 ring-primary/30">
             <Sparkles className="size-6" />
@@ -63,6 +64,7 @@ export function LoginForm() {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              onFocus={(e) => scrollFocusedIntoView(e.currentTarget)}
               className="auth-input w-full rounded-lg border border-border bg-secondary/40 px-3 py-2.5 text-base caret-primary placeholder:text-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40"
               placeholder="name@gmail.com"
             />
@@ -79,6 +81,7 @@ export function LoginForm() {
               minLength={6}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              onFocus={(e) => scrollFocusedIntoView(e.currentTarget)}
               className="auth-input auth-input-password w-full rounded-lg border border-border bg-secondary/40 px-3 py-2.5 text-base caret-primary placeholder:text-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40"
               placeholder="••••••••"
             />
