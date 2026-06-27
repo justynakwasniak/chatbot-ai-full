@@ -11,6 +11,7 @@ import {
   mapConversationForApi,
 } from '../services/chatDbService';
 import { getTeacherResponse } from '../services/groqService';
+import { getUserError, logServerError, USER_ERRORS } from '../utils/apiErrors';
 
 const DAILY_MESSAGE_LIMIT = Number(process.env.DAILY_MESSAGE_LIMIT) || 30;
 
@@ -31,7 +32,7 @@ router.get('/conversations', async (req: Request, res: Response) => {
     const userId = req.userId!;
 
     if (!isSupabaseConfigured()) {
-      return res.status(503).json({ success: false, error: 'Database not configured' });
+      return res.status(503).json({ success: false, error: USER_ERRORS.SERVICE_UNAVAILABLE });
     }
 
     const conversations = await listConversations(userId);
@@ -39,9 +40,11 @@ router.get('/conversations', async (req: Request, res: Response) => {
 
     res.json({ success: true, data });
   } catch (error) {
-    console.error('List conversations error:', error);
-    const message = error instanceof Error ? error.message : 'Failed to fetch conversations';
-    res.status(500).json({ success: false, error: message });
+    logServerError('List conversations', error);
+    res.status(500).json({
+      success: false,
+      error: getUserError(error, USER_ERRORS.FAILED_LOAD_CONVERSATIONS),
+    });
   }
 });
 
@@ -51,7 +54,7 @@ router.post('/conversations', async (req: Request, res: Response) => {
     const { title } = req.body;
 
     if (!isSupabaseConfigured()) {
-      return res.status(503).json({ success: false, error: 'Database not configured' });
+      return res.status(503).json({ success: false, error: USER_ERRORS.SERVICE_UNAVAILABLE });
     }
 
     const conversation = await createConversation(userId, title);
@@ -60,15 +63,10 @@ router.post('/conversations', async (req: Request, res: Response) => {
       data: mapConversationForApi(conversation),
     });
   } catch (error) {
-    console.error('Create conversation error:', error);
-    const message = error instanceof Error ? error.message : 'Failed to create conversation';
-    const isRlsError = message.includes('row-level security');
-
+    logServerError('Create conversation', error);
     res.status(500).json({
       success: false,
-      error: isRlsError
-        ? 'Supabase RLS blocked the request. Use the service_role key as SUPABASE_KEY in backend/.env (not the anon/publishable key).'
-        : message,
+      error: getUserError(error, USER_ERRORS.FAILED_CREATE_CONVERSATION),
     });
   }
 });
@@ -79,14 +77,14 @@ router.get('/conversations/:id', async (req: Request, res: Response) => {
     const { id } = req.params;
 
     if (!isSupabaseConfigured()) {
-      return res.status(503).json({ success: false, error: 'Database not configured' });
+      return res.status(503).json({ success: false, error: USER_ERRORS.SERVICE_UNAVAILABLE });
     }
 
     const conversations = await listConversations(userId);
     const conversation = conversations.find((item) => item.id === id);
 
     if (!conversation) {
-      return res.status(404).json({ success: false, error: 'Conversation not found' });
+      return res.status(404).json({ success: false, error: USER_ERRORS.CONVERSATION_NOT_FOUND });
     }
 
     const messages = await getConversationMessages(id, userId);
@@ -96,8 +94,11 @@ router.get('/conversations/:id', async (req: Request, res: Response) => {
       data: mapConversationForApi(conversation, messages),
     });
   } catch (error) {
-    console.error('Get conversation error:', error);
-    res.status(500).json({ success: false, error: 'Failed to fetch conversation' });
+    logServerError('Get conversation', error);
+    res.status(500).json({
+      success: false,
+      error: getUserError(error, USER_ERRORS.FAILED_LOAD_CONVERSATION),
+    });
   }
 });
 
@@ -107,25 +108,23 @@ router.post('/message', async (req: Request, res: Response) => {
     const { message, conversation_id: conversationId } = req.body;
 
     if (!message) {
-      return res.status(400).json({ success: false, error: 'Message is required' });
+      return res.status(400).json({ success: false, error: USER_ERRORS.MESSAGE_REQUIRED });
     }
 
     if (!process.env.GROQ_API_KEY) {
-      return res.status(500).json({
-        success: false,
-        error: 'Groq API key not configured. Add GROQ_API_KEY to backend/.env',
-      });
+      logServerError('Chat message', new Error('GROQ_API_KEY not configured'));
+      return res.status(503).json({ success: false, error: USER_ERRORS.AI_UNAVAILABLE });
     }
 
     if (!isSupabaseConfigured()) {
-      return res.status(503).json({ success: false, error: 'Database not configured' });
+      return res.status(503).json({ success: false, error: USER_ERRORS.SERVICE_UNAVAILABLE });
     }
 
     const messagesToday = await countUserMessagesToday(userId);
     if (messagesToday >= DAILY_MESSAGE_LIMIT) {
       return res.status(429).json({
         success: false,
-        error: `Daily limit reached (${DAILY_MESSAGE_LIMIT} messages per user). Try again tomorrow.`,
+        error: USER_ERRORS.DAILY_LIMIT(DAILY_MESSAGE_LIMIT),
       });
     }
 
@@ -147,29 +146,21 @@ router.post('/message', async (req: Request, res: Response) => {
       },
     });
   } catch (error: unknown) {
-    console.error('Chat error:', error);
+    logServerError('Chat message', error);
 
-    const apiError = error as { status?: number; code?: string; message?: string };
+    const apiError = error as { status?: number; message?: string };
 
     if (apiError.status === 401) {
-      return res.status(500).json({
-        success: false,
-        error: 'Invalid Groq API key. Check GROQ_API_KEY in backend/.env.',
-      });
+      return res.status(503).json({ success: false, error: USER_ERRORS.AI_UNAVAILABLE });
     }
 
     if (apiError.status === 429) {
-      return res.status(429).json({
-        success: false,
-        error: 'Groq rate limit exceeded. Please try again in a moment.',
-      });
+      return res.status(429).json({ success: false, error: USER_ERRORS.GROQ_RATE_LIMIT });
     }
 
     res.status(500).json({
       success: false,
-      error: apiError.message?.includes('row-level security')
-        ? 'Supabase RLS blocked the request. Use the service_role key as SUPABASE_KEY in backend/.env (not the anon/publishable key).'
-        : apiError.message || 'Failed to send message',
+      error: getUserError(error, USER_ERRORS.FAILED_SEND_MESSAGE),
     });
   }
 });

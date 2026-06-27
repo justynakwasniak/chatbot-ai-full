@@ -3,6 +3,7 @@ import cors from 'cors';
 import 'dotenv/config';
 import taskRoutes from './routes/taskRoutes';
 import chatRoutes from './routes/chatRoutes';
+import { isProduction, logServerError, USER_ERRORS } from './utils/apiErrors';
 
 const app: Express = express();
 
@@ -48,10 +49,10 @@ app.use('/api/chat', chatRoutes);
 
 // Error handling middleware
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
-  console.error('Error:', err);
+  logServerError(`${req.method} ${req.path}`, err);
   res.status(err.status || 500).json({
     success: false,
-    error: err.message || 'Internal server error',
+    error: isProduction() ? USER_ERRORS.SERVICE_UNAVAILABLE : (err.message || 'Internal server error'),
   });
 });
 

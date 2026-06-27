@@ -8,6 +8,7 @@ const cors_1 = __importDefault(require("cors"));
 require("dotenv/config");
 const taskRoutes_1 = __importDefault(require("./routes/taskRoutes"));
 const chatRoutes_1 = __importDefault(require("./routes/chatRoutes"));
+const apiErrors_1 = require("./utils/apiErrors");
 const app = (0, express_1.default)();
 function normalizeOrigin(url) {
     return url.replace(/\/$/, '');
@@ -46,10 +47,10 @@ app.use('/api/tasks', taskRoutes_1.default);
 app.use('/api/chat', chatRoutes_1.default);
 // Error handling middleware
 app.use((err, req, res, next) => {
-    console.error('Error:', err);
+    (0, apiErrors_1.logServerError)(`${req.method} ${req.path}`, err);
     res.status(err.status || 500).json({
         success: false,
-        error: err.message || 'Internal server error',
+        error: (0, apiErrors_1.isProduction)() ? apiErrors_1.USER_ERRORS.SERVICE_UNAVAILABLE : (err.message || 'Internal server error'),
     });
 });
 exports.default = app;
