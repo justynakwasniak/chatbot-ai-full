@@ -37,7 +37,8 @@ router.get('/conversations', async (req: Request, res: Response) => {
     res.json({ success: true, data });
   } catch (error) {
     console.error('List conversations error:', error);
-    res.status(500).json({ success: false, error: 'Failed to fetch conversations' });
+    const message = error instanceof Error ? error.message : 'Failed to fetch conversations';
+    res.status(500).json({ success: false, error: message });
   }
 });
 
