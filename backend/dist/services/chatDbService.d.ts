@@ -13,6 +13,7 @@ export interface DbMessage {
     content: string;
     created_at: string;
 }
+export declare function countUserMessagesToday(userId: string): Promise<number>;
 export declare function listConversations(userId: string): Promise<DbConversation[]>;
 export declare function createConversation(userId: string, title?: string): Promise<DbConversation>;
 export declare function getConversationMessages(conversationId: string, userId: string): Promise<DbMessage[]>;

@@ -3,6 +3,7 @@ import { requireAuth } from '../middleware/auth';
 import { isSupabaseConfigured } from '../config/supabase';
 import {
   addMessage,
+  countUserMessagesToday,
   createConversation,
   ensureConversation,
   getConversationMessages,
@@ -10,6 +11,8 @@ import {
   mapConversationForApi,
 } from '../services/chatDbService';
 import { getTeacherResponse } from '../services/groqService';
+
+const DAILY_MESSAGE_LIMIT = Number(process.env.DAILY_MESSAGE_LIMIT) || 30;
 
 const router = Router();
 
@@ -116,6 +119,14 @@ router.post('/message', async (req: Request, res: Response) => {
 
     if (!isSupabaseConfigured()) {
       return res.status(503).json({ success: false, error: 'Database not configured' });
+    }
+
+    const messagesToday = await countUserMessagesToday(userId);
+    if (messagesToday >= DAILY_MESSAGE_LIMIT) {
+      return res.status(429).json({
+        success: false,
+        error: `Daily limit reached (${DAILY_MESSAGE_LIMIT} messages per user). Try again tomorrow.`,
+      });
     }
 
     const resolvedConversationId = await ensureConversation(userId, conversationId);

@@ -36,6 +36,36 @@ function formatTimestamp(isoDate: string): string {
   });
 }
 
+function startOfUtcDayIso(): string {
+  const now = new Date();
+  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())).toISOString();
+}
+
+export async function countUserMessagesToday(userId: string): Promise<number> {
+  const supabase = getSupabase();
+  if (!supabase) throw new Error('Supabase not configured');
+
+  const { data: conversations, error: conversationsError } = await supabase
+    .from('conversations')
+    .select('id')
+    .eq('user_id', userId);
+
+  if (conversationsError) throw conversationsError;
+  if (!conversations?.length) return 0;
+
+  const conversationIds = conversations.map((conversation) => conversation.id);
+
+  const { count, error } = await supabase
+    .from('messages')
+    .select('*', { count: 'exact', head: true })
+    .in('conversation_id', conversationIds)
+    .eq('role', 'user')
+    .gte('created_at', startOfUtcDayIso());
+
+  if (error) throw error;
+  return count ?? 0;
+}
+
 export async function listConversations(userId: string) {
   const supabase = getSupabase();
   if (!supabase) return [];

@@ -5,6 +5,7 @@ const auth_1 = require("../middleware/auth");
 const supabase_1 = require("../config/supabase");
 const chatDbService_1 = require("../services/chatDbService");
 const groqService_1 = require("../services/groqService");
+const DAILY_MESSAGE_LIMIT = Number(process.env.DAILY_MESSAGE_LIMIT) || 30;
 const router = (0, express_1.Router)();
 router.get('/status', (req, res) => {
     res.json({
@@ -26,7 +27,8 @@ router.get('/conversations', async (req, res) => {
     }
     catch (error) {
         console.error('List conversations error:', error);
-        res.status(500).json({ success: false, error: 'Failed to fetch conversations' });
+        const message = error instanceof Error ? error.message : 'Failed to fetch conversations';
+        res.status(500).json({ success: false, error: message });
     }
 });
 router.post('/conversations', async (req, res) => {
@@ -92,6 +94,13 @@ router.post('/message', async (req, res) => {
         }
         if (!(0, supabase_1.isSupabaseConfigured)()) {
             return res.status(503).json({ success: false, error: 'Database not configured' });
+        }
+        const messagesToday = await (0, chatDbService_1.countUserMessagesToday)(userId);
+        if (messagesToday >= DAILY_MESSAGE_LIMIT) {
+            return res.status(429).json({
+                success: false,
+                error: `Daily limit reached (${DAILY_MESSAGE_LIMIT} messages per user). Try again tomorrow.`,
+            });
         }
         const resolvedConversationId = await (0, chatDbService_1.ensureConversation)(userId, conversationId);
         await (0, chatDbService_1.addMessage)(resolvedConversationId, userId, 'user', message);

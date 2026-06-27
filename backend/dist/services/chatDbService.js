@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.countUserMessagesToday = countUserMessagesToday;
 exports.listConversations = listConversations;
 exports.createConversation = createConversation;
 exports.getConversationMessages = getConversationMessages;
@@ -27,6 +28,33 @@ function formatTimestamp(isoDate) {
         hour: '2-digit',
         minute: '2-digit',
     });
+}
+function startOfUtcDayIso() {
+    const now = new Date();
+    return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())).toISOString();
+}
+async function countUserMessagesToday(userId) {
+    const supabase = (0, supabase_1.getSupabase)();
+    if (!supabase)
+        throw new Error('Supabase not configured');
+    const { data: conversations, error: conversationsError } = await supabase
+        .from('conversations')
+        .select('id')
+        .eq('user_id', userId);
+    if (conversationsError)
+        throw conversationsError;
+    if (!conversations?.length)
+        return 0;
+    const conversationIds = conversations.map((conversation) => conversation.id);
+    const { count, error } = await supabase
+        .from('messages')
+        .select('*', { count: 'exact', head: true })
+        .in('conversation_id', conversationIds)
+        .eq('role', 'user')
+        .gte('created_at', startOfUtcDayIso());
+    if (error)
+        throw error;
+    return count ?? 0;
 }
 async function listConversations(userId) {
     const supabase = (0, supabase_1.getSupabase)();
