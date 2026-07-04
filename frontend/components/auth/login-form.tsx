@@ -49,7 +49,7 @@ export function LoginForm() {
             Sign in to practice Spanish with your AI tutor
           </p>
           <p className="text-xs text-muted-foreground/80">
-            Demo app — any email works, no confirmation needed
+            Demo - use any email and password. No real inbox needed.
           </p>
         </div>
 

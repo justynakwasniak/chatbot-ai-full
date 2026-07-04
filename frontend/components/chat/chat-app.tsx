@@ -11,6 +11,7 @@ import {
 } from "@/lib/chat-api"
 import { getSupabase } from "@/lib/supabase-client"
 import { LoginForm } from "@/components/auth/login-form"
+import { LoadingScreen } from "@/components/loading-screen"
 import { ChatSidebar } from "./chat-sidebar"
 import { ChatWindow } from "./chat-window"
 import { cn } from "@/lib/utils"
@@ -178,9 +179,12 @@ export function ChatApp() {
 
   if (!authReady) {
     return (
-      <div className="flex h-dvh items-center justify-center bg-background text-sm text-muted-foreground">
-        Loading...
-      </div>
+      <LoadingScreen
+        message="Loading..."
+        delayedMessage="Still loading..."
+        delayedHint="Checking your session. This should only take a moment."
+        delayMs={3000}
+      />
     )
   }
 
@@ -190,9 +194,12 @@ export function ChatApp() {
 
   if (isLoading) {
     return (
-      <div className="flex h-dvh items-center justify-center bg-background text-sm text-muted-foreground">
-        Loading conversations...
-      </div>
+      <LoadingScreen
+        message="Loading conversations..."
+        delayedMessage="Starting server, please wait..."
+        delayedHint="The backend may take up to a minute to wake up on first visit."
+        delayMs={4000}
+      />
     )
   }
 
