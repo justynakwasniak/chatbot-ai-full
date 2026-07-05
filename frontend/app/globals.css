@@ -116,4 +116,10 @@
     outline: none;
     box-shadow: 0 0 0 2px color-mix(in oklab, var(--ring) 65%, transparent);
   }
+
+  /* Keyboard focus only — no ring on click or programmatic autofocus */
+  .input-bar:has(:focus-visible) {
+    outline: none;
+    box-shadow: 0 0 0 2px color-mix(in oklab, var(--ring) 65%, transparent);
+  }
 }

@@ -1,176 +1,166 @@
-# 🤖 Task Chatbot AI - Full Stack Project
+# HablaAI — AI Spanish Tutor (Demo)
 
-A modern full-stack application for managing tasks with AI-powered chat assistance using Supabase, React/Next.js, and Express.
+A full-stack demo app for practicing Spanish with an AI tutor. Built as a **portfolio / learning project** — not a production product.
 
-## 📋 Project Structure
+> **Demo notice**
+>
+> - This is a **training / showcase application**. Feel free to explore, but don’t treat it as a commercial service.
+> - **No real email required.** Use any email and password to sign up (e.g. `test@example.com`). You do **not** need a real inbox — email confirmation is disabled for the demo.
+> - **Fair use limit:** **30 user messages per account per day** (UTC). This protects the free-tier database and AI API costs if many people try the live demo.
+
+## Features
+
+- Email + password auth (Supabase)
+- Per-user chat history stored in PostgreSQL
+- AI replies via Groq (`llama-3.3-70b-versatile`)
+- Create, switch, and delete conversations
+- Mobile-friendly chat UI with keyboard-aware layout
+- Rate limiting and basic security (JWT auth, CORS, user-scoped data)
+
+## Tech Stack
+
+| Layer | Technologies |
+|-------|----------------|
+| Frontend | Next.js 14, React 18, TypeScript, Tailwind CSS |
+| Backend | Node.js, Express, TypeScript |
+| Database | Supabase (PostgreSQL) |
+| Auth | Supabase Auth (anon key on frontend, JWT on API) |
+| AI | Groq API |
+
+## Project Structure
 
 ```
 chatbot-ai/
-├── frontend/                 # Next.js React application
-│   ├── pages/               # Page components and routes
-│   ├── components/          # Reusable React components
-│   ├── hooks/              # Custom React hooks
-│   ├── styles/             # Global styles and CSS
-│   ├── utils/              # Utility functions and API services
-│   ├── package.json
-│   ├── tsconfig.json
-│   └── next.config.js
+├── frontend/                 # Next.js app (Vercel)
+│   ├── app/                  # App Router (layout, page)
+│   ├── components/
+│   │   ├── auth/             # Login / sign-up
+│   │   └── chat/             # Chat UI
+│   └── lib/                  # API client, Supabase, types
 │
-├── backend/                 # Express.js API server
+├── backend/                  # Express API (Render)
 │   ├── src/
-│   │   ├── routes/        # API route handlers
-│   │   ├── controllers/   # Business logic
-│   │   ├── middleware/    # Express middleware
-│   │   ├── models/        # Data models
-│   │   ├── config/        # Configuration files (Supabase, etc.)
-│   │   ├── app.ts         # Express app setup
-│   │   └── server.ts      # Server entry point
-│   ├── package.json
-│   └── tsconfig.json
+│   │   ├── routes/           # HTTP endpoints
+│   │   ├── middleware/       # Auth (JWT)
+│   │   ├── services/         # DB + Groq
+│   │   ├── config/           # Supabase client
+│   │   └── utils/            # User-facing errors
+│   └── supabase/             # SQL schema & migrations
 │
-├── shared/                  # Shared types and constants
-│   ├── types/              # TypeScript type definitions
-│   └── constants/          # Application constants
-│
-├── .env.example            # Environment variables template
-├── README.md               # This file
-└── project.config.json     # Project configuration
+├── .env.example
+└── render.yaml               # Backend deploy config
 ```
 
-## 🚀 Tech Stack
+## Prerequisites
 
-- **Frontend**: React 18, Next.js 14, TypeScript, Tailwind CSS
-- **Backend**: Node.js, Express, TypeScript
-- **Database**: Supabase (PostgreSQL)
-- **Authentication**: Supabase Auth
-- **API Communication**: Axios
-- **Development**: ts-node, ESLint
-
-## 📦 Installation
-
-### Prerequisites
 - Node.js 18+
-- npm or yarn
-- Supabase account
+- npm
+- [Supabase](https://supabase.com) project
+- [Groq](https://groq.com) API key
 
-### Frontend Setup
+## Setup
+
+### 1. Install dependencies
+
+From the repo root (npm workspaces):
 
 ```bash
-cd frontend
 npm install
 ```
 
-### Backend Setup
+Or install separately in `frontend/` and `backend/`.
 
-```bash
-cd backend
-npm install
-```
+### 2. Database
 
-## 🔧 Environment Configuration
+In Supabase **SQL Editor**, run:
 
-Create a `.env.local` file in both `frontend` and `backend` directories:
+1. `backend/supabase/schema.sql`
+2. `backend/supabase/migration-auth.sql` (if upgrading an older DB)
 
-**Frontend (.env.local)**
-```
+Enable **Email** auth in Supabase → Authentication → Providers. For the demo, you can disable email confirmation so any address works.
+
+### 3. Environment variables
+
+Copy `.env.example` and create:
+
+**`frontend/.env.local`**
+
+```env
 NEXT_PUBLIC_API_URL=http://localhost:5000
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 ```
 
-**Backend (.env)**
-```
+**`backend/.env`**
+
+```env
 NODE_ENV=development
 PORT=5000
 FRONTEND_URL=http://localhost:3000
 SUPABASE_URL=your_supabase_url
 SUPABASE_KEY=your_supabase_service_role_key
+GROQ_API_KEY=your_groq_api_key
+DAILY_MESSAGE_LIMIT=30
 ```
 
-## 🏃 Running the Project
+Never commit `.env` files. The backend must use the **service_role** key; the frontend only uses the **anon** key.
 
-### Development Mode
+## Running Locally
 
-**Terminal 1 - Backend:**
+**Terminal 1 — backend:**
+
 ```bash
 cd backend
 npm run dev
 ```
 
-**Terminal 2 - Frontend:**
+**Terminal 2 — frontend:**
+
 ```bash
 cd frontend
 npm run dev
 ```
 
-The application will be available at:
-- Frontend: http://localhost:3000
-- Backend: http://localhost:5000
+- Frontend: http://localhost:3000  
+- Backend: http://localhost:5000  
+- Health check: http://localhost:5000/health  
 
-### Production Build
+Or from the root:
 
-**Backend:**
 ```bash
-cd backend
-npm run build
-npm start
+npm run dev
 ```
 
-**Frontend:**
-```bash
-cd frontend
-npm run build
-npm start
-```
+## API Endpoints
 
-## 📚 API Endpoints
+All chat routes except `/status` require `Authorization: Bearer <supabase_jwt>`.
 
-### Tasks
-- `GET /api/tasks` - Get all tasks
-- `GET /api/tasks/:id` - Get task by ID
-- `POST /api/tasks` - Create new task
-- `PUT /api/tasks/:id` - Update task
-- `DELETE /api/tasks/:id` - Delete task
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/health` | Server health |
+| `GET` | `/api/chat/status` | DB / auth status |
+| `GET` | `/api/chat/conversations` | List user's conversations |
+| `POST` | `/api/chat/conversations` | Create conversation |
+| `GET` | `/api/chat/conversations/:id` | Get conversation + messages |
+| `DELETE` | `/api/chat/conversations/:id` | Delete conversation |
+| `POST` | `/api/chat/message` | Send message, get AI reply |
 
-### Chat
-- `POST /api/chat/message` - Send message to AI
-- `GET /api/chat/task/:task_id` - Get messages for task
-- `GET /health` - Health check
+**Rate limit:** `POST /api/chat/message` returns `429` when the user exceeds `DAILY_MESSAGE_LIMIT` (default **30 messages/day**).
 
-## 🗄️ Database Schema (Supabase)
+## Deployment
 
-### Tables to create:
-- `tasks` - Task management
-- `messages` - Chat messages
-- `users` - User profiles
+- **Frontend:** Vercel (`frontend/`) — set `NEXT_PUBLIC_*` env vars  
+- **Backend:** Render (`backend/`, see `render.yaml`) — set `SUPABASE_*`, `GROQ_API_KEY`, `FRONTEND_URL`, optional `DAILY_MESSAGE_LIMIT`  
 
-See `backend/src/models/` for schema details.
+After deploying the backend, redeploy the frontend if you add new API routes.
 
-## 🔐 Security Considerations
+## Security (summary)
 
-- Use environment variables for sensitive data
-- Implement proper authentication with Supabase
-- Validate all API inputs
-- Use CORS appropriately
+- Users can only access their own conversations (`user_id` from JWT, not request body)
+- Secrets (`GROQ_API_KEY`, service role key) only on the server
+- CORS restricted to `FRONTEND_URL` + localhost
+- User-facing error messages; no raw stack traces in production
 
-## 📝 Project Status
-
-🚧 **Early Development** - Basic project structure and architecture setup complete. Ready for:
-- Feature implementation
-- Database schema creation
-- UI component development
-- API endpoint expansion
-
-## 📄 License
+## License
 
 MIT
-
----
-
-**Next Steps:**
-1. Set up Supabase project and obtain credentials
-2. Configure environment variables
-3. Create database tables in Supabase
-4. Implement core features (task CRUD, AI chat)
-5. Add authentication
-

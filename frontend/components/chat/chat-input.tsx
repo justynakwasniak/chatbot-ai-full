@@ -57,7 +57,7 @@ export function ChatInput({ onSend, disabled = false, onFocus, focusKey }: ChatI
 
   const inputBar = (
     <div className="mx-auto max-w-3xl">
-      <div className="glass-strong flex items-end gap-2 rounded-2xl border border-border p-2 shadow-xl shadow-black/20 focus-within:ring-1 focus-within:ring-primary/40">
+      <div className="input-bar glass-strong flex items-end gap-2 rounded-2xl border border-border p-2 shadow-xl shadow-black/20">
         <button
           type="button"
           className="focus-ring flex size-9 shrink-0 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
@@ -80,7 +80,7 @@ export function ChatInput({ onSend, disabled = false, onFocus, focusKey }: ChatI
           rows={1}
           disabled={disabled}
           placeholder={disabled ? "Waiting for response..." : "Message HablaAI..."}
-          className="focus-ring max-h-40 flex-1 resize-none bg-transparent py-2 text-base leading-relaxed text-foreground placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-60"
+          className="max-h-40 flex-1 resize-none bg-transparent py-2 text-base leading-relaxed text-foreground placeholder:text-muted-foreground focus:outline-none disabled:cursor-not-allowed disabled:opacity-60"
         />
 
         <button
