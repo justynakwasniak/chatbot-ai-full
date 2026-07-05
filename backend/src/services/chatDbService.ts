@@ -29,13 +29,6 @@ function formatRelativeTime(isoDate: string): string {
   return `${diffDays}d ago`;
 }
 
-function formatTimestamp(isoDate: string): string {
-  return new Date(isoDate).toLocaleTimeString('en-US', {
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-}
-
 function startOfUtcDayIso(): string {
   const now = new Date();
   return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())).toISOString();
@@ -210,7 +203,7 @@ export function mapConversationForApi(conversation: DbConversation, messages: Db
       id: message.id,
       role: message.role,
       content: message.content,
-      timestamp: formatTimestamp(message.created_at),
+      timestamp: message.created_at,
     })),
   };
 }

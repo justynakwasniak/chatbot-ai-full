@@ -121,7 +121,7 @@ export function ChatApp() {
   async function handleSend(text: string) {
     if (!activeId) return
 
-    const now = new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })
+    const now = new Date().toISOString()
 
     const newMessage: Message = {
       id: `${Date.now()}`,
@@ -151,7 +151,7 @@ export function ChatApp() {
         id: data.data?.id || `${Date.now()}-ai`,
         role: "assistant",
         content: data.response || data.data?.content || "Sorry, I couldn't process your message.",
-        timestamp: new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }),
+        timestamp: data.data?.timestamp ?? new Date().toISOString(),
       }
 
       setConversations((prev) =>
@@ -166,7 +166,7 @@ export function ChatApp() {
         id: `${Date.now()}-error`,
         role: "assistant",
         content: `❌ ${error instanceof Error ? error.message : "Connection error. Please try again."}`,
-        timestamp: new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }),
+        timestamp: new Date().toISOString(),
       }
 
       setConversations((prev) =>

@@ -100,14 +100,19 @@ export function ChatSidebar({
                       )}
                     />
                     <div className="min-w-0 flex-1">
-                      <span
-                        className={cn(
-                          "block truncate text-sm",
-                          isActive ? "font-medium text-foreground" : "text-foreground/90",
+                      <div className="flex items-baseline justify-between gap-2">
+                        <span
+                          className={cn(
+                            "min-w-0 truncate text-sm",
+                            isActive ? "font-medium text-foreground" : "text-foreground/90",
+                          )}
+                        >
+                          {c.title}
+                        </span>
+                        {c.updatedAt && (
+                          <span className="shrink-0 text-[10px] text-muted-foreground">{c.updatedAt}</span>
                         )}
-                      >
-                        {c.title}
-                      </span>
+                      </div>
                       <p className="truncate text-xs text-muted-foreground">{c.preview}</p>
                     </div>
                   </button>

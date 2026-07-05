@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils"
+import { formatMessageTime } from "@/lib/format-time"
 import type { Message } from "@/lib/chat-data"
 import { Sparkles, User } from "lucide-react"
 
@@ -28,7 +29,7 @@ export function ChatMessage({ message }: ChatMessageProps) {
         >
           <p className="whitespace-pre-wrap text-pretty">{message.content}</p>
         </div>
-        <span className="px-1 text-xs text-muted-foreground">{message.timestamp}</span>
+        <span className="px-1 text-xs text-muted-foreground">{formatMessageTime(message.timestamp)}</span>
       </div>
 
       {isUser && (
