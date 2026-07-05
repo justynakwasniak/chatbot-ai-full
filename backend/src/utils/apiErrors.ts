@@ -9,6 +9,7 @@ export const USER_ERRORS = {
   FAILED_CREATE_CONVERSATION: 'Failed to create a new chat.',
   FAILED_LOAD_CONVERSATION: 'Failed to load conversation.',
   FAILED_SEND_MESSAGE: 'Failed to send message. Please try again.',
+  FAILED_DELETE_CONVERSATION: 'Failed to delete chat. Please try again.',
   GROQ_RATE_LIMIT: 'Too many requests. Please wait a moment and try again.',
   DAILY_LIMIT: (limit: number) =>
     `Daily limit reached (${limit} messages per user). Try again tomorrow.`,

@@ -94,6 +94,22 @@ export async function createConversation(userId: string, title = 'New chat') {
   return data as DbConversation;
 }
 
+export async function deleteConversation(conversationId: string, userId: string): Promise<void> {
+  const supabase = getSupabase();
+  if (!supabase) throw new Error('Supabase not configured');
+
+  const { data, error } = await supabase
+    .from('conversations')
+    .delete()
+    .eq('id', conversationId)
+    .eq('user_id', userId)
+    .select('id')
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!data) throw new Error('Conversation not found');
+}
+
 export async function getConversationMessages(conversationId: string, userId: string) {
   const supabase = getSupabase();
   if (!supabase) return [];

@@ -2,13 +2,14 @@
 
 import { cn } from "@/lib/utils"
 import type { Conversation } from "@/lib/chat-data"
-import { Plus, MessageSquare, Search, Sparkles, LogOut, PanelLeftClose } from "lucide-react"
+import { Plus, MessageSquare, Search, Sparkles, LogOut, PanelLeftClose, Trash2 } from "lucide-react"
 
 interface ChatSidebarProps {
   conversations: Conversation[]
   activeId: string
   onSelect: (id: string) => void
   onNewChat: () => void
+  onDelete: (id: string) => void
   userEmail: string
   userInitials: string
   onLogout: () => void
@@ -20,6 +21,7 @@ export function ChatSidebar({
   activeId,
   onSelect,
   onNewChat,
+  onDelete,
   userEmail,
   userInitials,
   onLogout,
@@ -75,35 +77,47 @@ export function ChatSidebar({
             const isActive = c.id === activeId
             return (
               <li key={c.id}>
-                <button
-                  onClick={() => onSelect(c.id)}
+                <div
                   className={cn(
-                    "group flex w-full items-start gap-2.5 rounded-lg px-2.5 py-2 text-left transition-colors",
+                    "group flex items-start gap-1 rounded-lg transition-colors",
                     isActive
                       ? "bg-primary/12 ring-1 ring-primary/25"
                       : "hover:bg-secondary/60",
                   )}
                 >
-                  <MessageSquare
-                    className={cn(
-                      "mt-0.5 size-4 shrink-0",
-                      isActive ? "text-primary" : "text-muted-foreground",
-                    )}
-                  />
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center justify-between gap-2">
+                  <button
+                    type="button"
+                    onClick={() => onSelect(c.id)}
+                    className="flex min-w-0 flex-1 items-start gap-2.5 px-2.5 py-2 text-left"
+                  >
+                    <MessageSquare
+                      className={cn(
+                        "mt-0.5 size-4 shrink-0",
+                        isActive ? "text-primary" : "text-muted-foreground",
+                      )}
+                    />
+                    <div className="min-w-0 flex-1">
                       <span
                         className={cn(
-                          "truncate text-sm",
+                          "block truncate text-sm",
                           isActive ? "font-medium text-foreground" : "text-foreground/90",
                         )}
                       >
                         {c.title}
                       </span>
+                      <p className="truncate text-xs text-muted-foreground">{c.preview}</p>
                     </div>
-                    <p className="truncate text-xs text-muted-foreground">{c.preview}</p>
-                  </div>
-                </button>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onDelete(c.id)}
+                    className="mr-1.5 mt-2 shrink-0 rounded-md p-1.5 text-muted-foreground opacity-100 transition-colors hover:bg-destructive/15 hover:text-destructive sm:opacity-0 sm:group-hover:opacity-100 sm:focus-visible:opacity-100"
+                    aria-label={`Delete ${c.title}`}
+                    title="Delete chat"
+                  >
+                    <Trash2 className="size-3.5" />
+                  </button>
+                </div>
               </li>
             )
           })}

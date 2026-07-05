@@ -48,11 +48,31 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
     },
   });
 
-  const data = await response.json();
+  const contentType = response.headers.get('content-type') ?? '';
+  const body = await response.text();
+
+  if (!contentType.includes('application/json')) {
+    if (response.status === 404) {
+      throw new Error(
+        'Delete is not available on the server yet. Redeploy the backend on Render, then try again.',
+      );
+    }
+    throw new Error(
+      `Unexpected server response (${response.status}). Check NEXT_PUBLIC_API_URL on Vercel.`,
+    );
+  }
+
+  let data: { success?: boolean; error?: string };
+  try {
+    data = JSON.parse(body) as { success?: boolean; error?: string };
+  } catch {
+    throw new Error('Invalid response from server. Check NEXT_PUBLIC_API_URL on Vercel.');
+  }
+
   if (!response.ok || !data.success) {
     throw new Error(data.error || 'Request failed');
   }
-  return data;
+  return data as T;
 }
 
 export async function fetchChatStatus(): Promise<boolean> {
@@ -79,6 +99,12 @@ export async function fetchConversationMessages(conversationId: string): Promise
     `/api/chat/conversations/${conversationId}`,
   );
   return data.data;
+}
+
+export async function deleteConversation(conversationId: string): Promise<void> {
+  await request<{ success: true }>(`/api/chat/conversations/${conversationId}`, {
+    method: 'DELETE',
+  });
 }
 
 export async function sendChatMessage(conversationId: string, message: string) {

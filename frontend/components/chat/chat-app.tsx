@@ -5,6 +5,7 @@ import type { Session } from "@supabase/supabase-js"
 import type { Conversation, Message } from "@/lib/chat-data"
 import {
   createConversation,
+  deleteConversation,
   fetchConversationMessages,
   fetchConversations,
   sendChatMessage,
@@ -213,6 +214,30 @@ export function ChatApp() {
     }
   }
 
+  async function handleDelete(id: string) {
+    if (!window.confirm("Delete this chat? This cannot be undone.")) return
+
+    try {
+      await deleteConversation(id)
+      const remaining = conversations.filter((conversation) => conversation.id !== id)
+
+      if (remaining.length === 0) {
+        const fresh = await createConversation()
+        setConversations([fresh])
+        setActiveId(fresh.id)
+      } else {
+        setConversations(remaining)
+        if (activeId === id) {
+          setActiveId(remaining[0].id)
+        }
+      }
+      setSidebarOpen(false)
+    } catch (error) {
+      console.error("Error deleting conversation:", error)
+      showBannerError(getErrorMessage(error, "Failed to delete chat. Please try again."))
+    }
+  }
+
   async function handleLogout() {
     await getSupabase().auth.signOut()
   }
@@ -265,6 +290,7 @@ export function ChatApp() {
           activeId={activeId}
           onSelect={handleSelect}
           onNewChat={handleNewChat}
+          onDelete={handleDelete}
           userEmail={userEmail}
           userInitials={userInitials}
           onLogout={handleLogout}
@@ -295,6 +321,7 @@ export function ChatApp() {
             activeId={activeId}
             onSelect={handleSelect}
             onNewChat={handleNewChat}
+            onDelete={handleDelete}
             onClose={() => setSidebarOpen(false)}
             userEmail={userEmail}
             userInitials={userInitials}

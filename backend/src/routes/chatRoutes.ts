@@ -5,6 +5,7 @@ import {
   addMessage,
   countUserMessagesToday,
   createConversation,
+  deleteConversation,
   ensureConversation,
   getConversationMessages,
   listConversations,
@@ -98,6 +99,31 @@ router.get('/conversations/:id', async (req: Request, res: Response) => {
     res.status(500).json({
       success: false,
       error: getUserError(error, USER_ERRORS.FAILED_LOAD_CONVERSATION),
+    });
+  }
+});
+
+router.delete('/conversations/:id', async (req: Request, res: Response) => {
+  try {
+    const userId = req.userId!;
+    const { id } = req.params;
+
+    if (!isSupabaseConfigured()) {
+      return res.status(503).json({ success: false, error: USER_ERRORS.SERVICE_UNAVAILABLE });
+    }
+
+    await deleteConversation(id, userId);
+    res.json({ success: true });
+  } catch (error) {
+    logServerError('Delete conversation', error);
+
+    if (error instanceof Error && error.message.includes('Conversation not found')) {
+      return res.status(404).json({ success: false, error: USER_ERRORS.CONVERSATION_NOT_FOUND });
+    }
+
+    res.status(500).json({
+      success: false,
+      error: getUserError(error, USER_ERRORS.FAILED_DELETE_CONVERSATION),
     });
   }
 });
