@@ -1,20 +1,30 @@
 "use client"
 
-import { useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import type { FocusEvent, KeyboardEvent } from "react"
-import { ArrowUp, Paperclip, Mic } from "lucide-react"
+import { ArrowUp, Loader2, Paperclip, Mic } from "lucide-react"
 import { useIsMobileLayout, scrollFocusedIntoView } from "@/lib/mobile-keyboard"
 
 interface ChatInputProps {
   onSend: (text: string) => void
   disabled?: boolean
   onFocus?: () => void
+  focusKey?: string
 }
 
-export function ChatInput({ onSend, disabled = false, onFocus }: ChatInputProps) {
+export function ChatInput({ onSend, disabled = false, onFocus, focusKey }: ChatInputProps) {
   const [value, setValue] = useState("")
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const isMobile = useIsMobileLayout()
+
+  useEffect(() => {
+    if (isMobile || disabled) return
+
+    const frame = requestAnimationFrame(() => {
+      textareaRef.current?.focus({ preventScroll: true })
+    })
+    return () => cancelAnimationFrame(frame)
+  }, [focusKey, isMobile, disabled])
 
   function handleInput() {
     const el = textareaRef.current
@@ -82,9 +92,13 @@ export function ChatInput({ onSend, disabled = false, onFocus }: ChatInputProps)
           onClick={submit}
           disabled={disabled || !value.trim()}
           className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:brightness-110 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
-          aria-label="Send message"
+          aria-label={disabled ? "Waiting for response" : "Send message"}
         >
-          <ArrowUp className="size-5" />
+          {disabled ? (
+            <Loader2 className="size-5 animate-spin" aria-hidden />
+          ) : (
+            <ArrowUp className="size-5" />
+          )}
         </button>
       </div>
       {!isMobile && (

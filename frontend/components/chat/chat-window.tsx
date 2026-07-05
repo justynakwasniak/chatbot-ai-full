@@ -66,7 +66,12 @@ export function ChatWindow({ conversation, onSend, onOpenSidebar, isAiTyping = f
       </div>
 
       {/* Input */}
-      <ChatInput onSend={onSend} disabled={isAiTyping} onFocus={scrollToBottom} />
+      <ChatInput
+        onSend={onSend}
+        disabled={isAiTyping}
+        onFocus={scrollToBottom}
+        focusKey={conversation?.id}
+      />
     </div>
   )
 }

@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { Spinner } from "@/components/spinner"
 
 interface LoadingScreenProps {
   message: string
@@ -25,7 +26,8 @@ export function LoadingScreen({
   const isDelayed = showDelayed && delayedMessage
 
   return (
-    <div className="flex h-dvh flex-col items-center justify-center gap-2 bg-background px-6 text-center">
+    <div className="flex h-dvh flex-col items-center justify-center gap-3 bg-background px-6 text-center">
+      <Spinner className="size-6" />
       <p className="text-sm text-foreground">{isDelayed ? delayedMessage : message}</p>
       {isDelayed && delayedHint && (
         <p className="max-w-xs text-xs text-muted-foreground">{delayedHint}</p>
