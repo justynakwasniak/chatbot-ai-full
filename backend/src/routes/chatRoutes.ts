@@ -12,7 +12,7 @@ import {
   mapConversationForApi,
 } from '../services/chatDbService';
 import { getTeacherResponse } from '../services/groqService';
-import { getUserError, logServerError, USER_ERRORS } from '../utils/apiErrors';
+import { getHttpStatus, getUserError, logServerError, USER_ERRORS } from '../utils/apiErrors';
 
 const DAILY_MESSAGE_LIMIT = Number(process.env.DAILY_MESSAGE_LIMIT) || 30;
 
@@ -174,13 +174,13 @@ router.post('/message', async (req: Request, res: Response) => {
   } catch (error: unknown) {
     logServerError('Chat message', error);
 
-    const apiError = error as { status?: number; message?: string };
+    const status = getHttpStatus(error);
 
-    if (apiError.status === 401) {
+    if (status === 401) {
       return res.status(503).json({ success: false, error: USER_ERRORS.AI_UNAVAILABLE });
     }
 
-    if (apiError.status === 429) {
+    if (status === 429) {
       return res.status(429).json({ success: false, error: USER_ERRORS.GROQ_RATE_LIMIT });
     }
 

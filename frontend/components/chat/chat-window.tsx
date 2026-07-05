@@ -32,11 +32,12 @@ export function ChatWindow({ conversation, onSend, onOpenSidebar, isAiTyping = f
       {/* Header */}
       <header className="glass flex items-center gap-3 border-b border-border px-4 py-3 sm:px-6">
         <button
+          type="button"
           onClick={onOpenSidebar}
-          className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground md:hidden"
+          className="focus-ring rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground md:hidden"
           aria-label="Open sidebar"
         >
-          <PanelLeft className="size-5" />
+          <PanelLeft className="size-5" aria-hidden />
         </button>
         <div className="min-w-0 flex-1">
           <h1 className="truncate text-sm font-semibold text-foreground">

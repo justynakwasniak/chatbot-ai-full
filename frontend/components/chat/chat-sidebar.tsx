@@ -39,31 +39,34 @@ export function ChatSidebar({
         {onClose && (
           <button
             onClick={onClose}
-            className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground md:hidden"
+            className="focus-ring rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground md:hidden"
             aria-label="Close sidebar"
           >
-            <PanelLeftClose className="size-4" />
+            <PanelLeftClose className="size-4" aria-hidden />
           </button>
         )}
       </div>
 
       <div className="px-3">
         <button
+          type="button"
           onClick={onNewChat}
-          className="flex w-full items-center gap-2 rounded-lg bg-primary px-3 py-2.5 text-sm font-medium text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:brightness-110 active:scale-[0.98]"
+          className="focus-ring flex w-full items-center gap-2 rounded-lg bg-primary px-3 py-2.5 text-sm font-medium text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:brightness-110 active:scale-[0.98]"
         >
-          <Plus className="size-4" />
+          <Plus className="size-4" aria-hidden />
           New chat
         </button>
       </div>
 
       <div className="px-3 py-3">
         <div className="flex items-center gap-2 rounded-lg border border-border bg-secondary/40 px-3 py-2">
-          <Search className="size-4 shrink-0 text-muted-foreground" />
+          <Search className="size-4 shrink-0 text-muted-foreground" aria-hidden />
           <input
-            type="text"
+            id="sidebar-search"
+            type="search"
+            aria-label="Search conversations"
             placeholder="Search conversations..."
-            className="w-full bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
+            className="focus-ring w-full bg-transparent text-sm text-foreground placeholder:text-muted-foreground"
           />
         </div>
       </div>
@@ -88,7 +91,7 @@ export function ChatSidebar({
                   <button
                     type="button"
                     onClick={() => onSelect(c.id)}
-                    className="flex min-w-0 flex-1 items-start gap-2.5 px-2.5 py-2 text-left"
+                    className="focus-ring flex min-w-0 flex-1 items-start gap-2.5 rounded-md px-2.5 py-2 text-left"
                   >
                     <MessageSquare
                       className={cn(
@@ -111,11 +114,11 @@ export function ChatSidebar({
                   <button
                     type="button"
                     onClick={() => onDelete(c.id)}
-                    className="mr-1.5 mt-2 shrink-0 rounded-md p-1.5 text-muted-foreground opacity-100 transition-colors hover:bg-destructive/15 hover:text-destructive sm:opacity-0 sm:group-hover:opacity-100 sm:focus-visible:opacity-100"
+                    className="focus-ring mr-1.5 mt-2 shrink-0 rounded-md p-1.5 text-muted-foreground opacity-100 transition-colors hover:bg-destructive/15 hover:text-destructive sm:opacity-0 sm:group-hover:opacity-100 sm:focus-visible:opacity-100"
                     aria-label={`Delete ${c.title}`}
                     title="Delete chat"
                   >
-                    <Trash2 className="size-3.5" />
+                    <Trash2 className="size-3.5" aria-hidden />
                   </button>
                 </div>
               </li>
@@ -134,12 +137,13 @@ export function ChatSidebar({
             <p className="truncate text-xs text-muted-foreground">Signed in</p>
           </div>
           <button
+            type="button"
             onClick={onLogout}
-            className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+            className="focus-ring rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
             aria-label="Sign out"
             title="Sign out"
           >
-            <LogOut className="size-4" />
+            <LogOut className="size-4" aria-hidden />
           </button>
         </div>
       </div>

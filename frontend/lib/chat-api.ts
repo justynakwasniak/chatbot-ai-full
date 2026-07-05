@@ -75,12 +75,6 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
   return data as T;
 }
 
-export async function fetchChatStatus(): Promise<boolean> {
-  const response = await fetch(`${API_URL}/api/chat/status`);
-  const data = await response.json();
-  return Boolean(data.success && data.dbEnabled);
-}
-
 export async function fetchConversations(): Promise<Conversation[]> {
   const data = await request<{ success: true; data: Conversation[] }>('/api/chat/conversations');
   return data.data;

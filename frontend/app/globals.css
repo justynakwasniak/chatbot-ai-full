@@ -111,4 +111,9 @@
   .auth-input-password {
     letter-spacing: 0.12em;
   }
+
+  .focus-ring:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px color-mix(in oklab, var(--ring) 65%, transparent);
+  }
 }

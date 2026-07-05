@@ -34,3 +34,16 @@ export function getUserError(error: unknown, fallback: string): string {
 export function isProduction(): boolean {
   return process.env.NODE_ENV === 'production';
 }
+
+export function getHttpStatus(error: unknown): number {
+  if (typeof error === 'object' && error !== null && 'status' in error) {
+    const status = (error as { status: unknown }).status;
+    if (typeof status === 'number') return status;
+  }
+  return 500;
+}
+
+export function getErrorMessage(error: unknown, fallback = 'Internal server error'): string {
+  if (error instanceof Error && error.message) return error.message;
+  return fallback;
+}

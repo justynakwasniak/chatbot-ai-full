@@ -11,7 +11,6 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   title: 'HablaAI',
   description: 'Your AI Spanish tutor for natural conversations',
-  generator: 'v0.app',
   icons: {
     icon: [
       {

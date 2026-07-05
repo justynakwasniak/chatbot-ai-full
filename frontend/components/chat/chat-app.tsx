@@ -79,7 +79,6 @@ export function ChatApp() {
 
       return () => subscription.unsubscribe()
     } catch (error) {
-      console.error(error)
       showBannerError(getErrorMessage(error, "Auth configuration error"), 0)
       setAuthReady(true)
     }
@@ -110,7 +109,6 @@ export function ChatApp() {
         setConversations([created])
         setActiveId(created.id)
       } catch (error) {
-        console.error("Error loading conversations:", error)
         showBannerError(getErrorMessage(error, "Failed to load conversations"), 0)
       } finally {
         setIsLoading(false)
@@ -164,7 +162,6 @@ export function ChatApp() {
         ),
       )
     } catch (error) {
-      console.error("Error sending message:", error)
       const errorMessage: Message = {
         id: `${Date.now()}-error`,
         role: "assistant",
@@ -191,7 +188,6 @@ export function ChatApp() {
       setActiveId(fresh.id)
       setSidebarOpen(false)
     } catch (error) {
-      console.error("Error creating conversation:", error)
       showBannerError(getErrorMessage(error, "Failed to create a new chat. Please try again."))
     }
   }
@@ -209,7 +205,6 @@ export function ChatApp() {
         prev.map((conversation) => (conversation.id === id ? loaded : conversation)),
       )
     } catch (error) {
-      console.error("Error loading conversation:", error)
       showBannerError(getErrorMessage(error, "Failed to load conversation. Please try again."))
     }
   }
@@ -233,7 +228,6 @@ export function ChatApp() {
       }
       setSidebarOpen(false)
     } catch (error) {
-      console.error("Error deleting conversation:", error)
       showBannerError(getErrorMessage(error, "Failed to delete chat. Please try again."))
     }
   }

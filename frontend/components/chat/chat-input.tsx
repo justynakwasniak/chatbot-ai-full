@@ -60,13 +60,17 @@ export function ChatInput({ onSend, disabled = false, onFocus, focusKey }: ChatI
       <div className="glass-strong flex items-end gap-2 rounded-2xl border border-border p-2 shadow-xl shadow-black/20 focus-within:ring-1 focus-within:ring-primary/40">
         <button
           type="button"
-          className="flex size-9 shrink-0 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+          className="focus-ring flex size-9 shrink-0 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
           aria-label="Attach file"
         >
-          <Paperclip className="size-5" />
+          <Paperclip className="size-5" aria-hidden />
         </button>
 
+        <label htmlFor="chat-message" className="sr-only">
+          Message
+        </label>
         <textarea
+          id="chat-message"
           ref={textareaRef}
           value={value}
           onChange={(e) => setValue(e.target.value)}
@@ -76,28 +80,28 @@ export function ChatInput({ onSend, disabled = false, onFocus, focusKey }: ChatI
           rows={1}
           disabled={disabled}
           placeholder={disabled ? "Waiting for response..." : "Message HablaAI..."}
-          className="max-h-40 flex-1 resize-none bg-transparent py-2 text-base leading-relaxed text-foreground placeholder:text-muted-foreground focus:outline-none disabled:cursor-not-allowed disabled:opacity-60"
+          className="focus-ring max-h-40 flex-1 resize-none bg-transparent py-2 text-base leading-relaxed text-foreground placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-60"
         />
 
         <button
           type="button"
-          className="flex size-9 shrink-0 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+          className="focus-ring flex size-9 shrink-0 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
           aria-label="Record voice message"
         >
-          <Mic className="size-5" />
+          <Mic className="size-5" aria-hidden />
         </button>
 
         <button
           type="button"
           onClick={submit}
           disabled={disabled || !value.trim()}
-          className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:brightness-110 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
+          className="focus-ring flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:brightness-110 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
           aria-label={disabled ? "Waiting for response" : "Send message"}
         >
           {disabled ? (
             <Loader2 className="size-5 animate-spin" aria-hidden />
           ) : (
-            <ArrowUp className="size-5" />
+            <ArrowUp className="size-5" aria-hidden />
           )}
         </button>
       </div>

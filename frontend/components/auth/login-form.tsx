@@ -88,17 +88,17 @@ export function LoginForm() {
           </div>
 
           {error && (
-            <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p>
+            <p role="alert" className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p>
           )}
 
           {message && (
-            <p className="rounded-lg bg-primary/10 px-3 py-2 text-sm text-primary">{message}</p>
+            <p role="status" className="rounded-lg bg-primary/10 px-3 py-2 text-sm text-primary">{message}</p>
           )}
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:brightness-110 disabled:opacity-50"
+            className="focus-ring w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:brightness-110 disabled:opacity-50"
           >
             {loading ? "Please wait..." : isSignUp ? "Create account" : "Sign in"}
           </button>
@@ -113,7 +113,7 @@ export function LoginForm() {
               setError(null)
               setMessage(null)
             }}
-            className="font-medium text-primary hover:underline"
+            className="focus-ring font-medium text-primary hover:underline"
           >
             {isSignUp ? "Sign in" : "Sign up"}
           </button>
