@@ -32,6 +32,7 @@ export function ChatApp() {
   const [isAiTyping, setIsAiTyping] = useState(false)
   const [bannerError, setBannerError] = useState<string | null>(null)
   const bannerTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const { isMobile, height: viewportHeight, offsetTop: viewportOffsetTop } = useMobileViewport()
 
   const active = conversations.find((c) => c.id === activeId)
 
@@ -244,7 +245,6 @@ export function ChatApp() {
 
   const userEmail = session.user.email ?? "User"
   const userInitials = userEmail.slice(0, 2).toUpperCase()
-  const { isMobile, height: viewportHeight, offsetTop: viewportOffsetTop } = useMobileViewport()
 
   const chatContent = (
     <>
