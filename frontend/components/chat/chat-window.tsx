@@ -17,8 +17,14 @@ interface ChatWindowProps {
 export function ChatWindow({ conversation, onSend, onOpenSidebar, isAiTyping = false }: ChatWindowProps) {
   const scrollRef = useRef<HTMLDivElement>(null)
 
+  function scrollToBottom() {
+    const el = scrollRef.current
+    if (!el) return
+    el.scrollTo({ top: el.scrollHeight, behavior: "smooth" })
+  }
+
   useEffect(() => {
-    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" })
+    scrollToBottom()
   }, [conversation?.messages.length, conversation?.id, isAiTyping])
 
   return (
@@ -60,7 +66,7 @@ export function ChatWindow({ conversation, onSend, onOpenSidebar, isAiTyping = f
       </div>
 
       {/* Input */}
-      <ChatInput onSend={onSend} disabled={isAiTyping} />
+      <ChatInput onSend={onSend} disabled={isAiTyping} onFocus={scrollToBottom} />
     </div>
   )
 }

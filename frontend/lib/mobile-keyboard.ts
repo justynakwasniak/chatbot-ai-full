@@ -2,11 +2,13 @@
 
 import { useEffect, useState } from 'react';
 
+const MOBILE_QUERY = '(max-width: 768px)';
+
 export function useIsMobileLayout() {
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
-    const media = window.matchMedia('(max-width: 768px)');
+    const media = window.matchMedia(MOBILE_QUERY);
     setIsMobile(media.matches);
 
     function handleChange(event: MediaQueryListEvent) {
@@ -20,49 +22,51 @@ export function useIsMobileLayout() {
   return isMobile;
 }
 
-export function scrollFocusedIntoView(element: HTMLElement) {
-  if (!window.matchMedia('(max-width: 768px)').matches) return;
-
-  const scroll = () => {
-    element.scrollIntoView({ block: 'end', inline: 'nearest' });
-  };
-
-  scroll();
-  setTimeout(scroll, 150);
-  setTimeout(scroll, 400);
-}
-
-/** Distance from bottom of layout viewport to bottom of visible viewport (keyboard height). */
-export function useVisualViewportBottom() {
+/** Tracks the visible viewport on mobile (shrinks when the keyboard opens). */
+export function useMobileViewport() {
   const isMobile = useIsMobileLayout();
-  const [bottomOffset, setBottomOffset] = useState(0);
+  const [layout, setLayout] = useState({ height: 0, offsetTop: 0 });
 
   useEffect(() => {
-    if (!isMobile) {
-      setBottomOffset(0);
-      return;
-    }
+    if (!isMobile) return;
 
     const viewport = window.visualViewport;
-    if (!viewport) return;
 
-    function updateOffset() {
+    function update() {
       const vv = window.visualViewport;
-      if (!vv) return;
-      setBottomOffset(Math.max(0, window.innerHeight - vv.offsetTop - vv.height));
+      if (!vv) {
+        setLayout({ height: window.innerHeight, offsetTop: 0 });
+        return;
+      }
+      setLayout({
+        height: vv.height,
+        offsetTop: vv.offsetTop,
+      });
     }
 
-    updateOffset();
-    viewport.addEventListener('resize', updateOffset);
-    viewport.addEventListener('scroll', updateOffset);
-    window.addEventListener('orientationchange', updateOffset);
+    update();
+    viewport?.addEventListener('resize', update);
+    viewport?.addEventListener('scroll', update);
+    window.addEventListener('orientationchange', update);
 
     return () => {
-      viewport.removeEventListener('resize', updateOffset);
-      viewport.removeEventListener('scroll', updateOffset);
-      window.removeEventListener('orientationchange', updateOffset);
+      viewport?.removeEventListener('resize', update);
+      viewport?.removeEventListener('scroll', update);
+      window.removeEventListener('orientationchange', update);
     };
   }, [isMobile]);
 
-  return { isMobile, bottomOffset };
+  return { isMobile, height: layout.height, offsetTop: layout.offsetTop };
+}
+
+export function scrollFocusedIntoView(element: HTMLElement) {
+  if (!window.matchMedia(MOBILE_QUERY).matches) return;
+
+  const scroll = () => {
+    element.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+  };
+
+  scroll();
+  setTimeout(scroll, 100);
+  setTimeout(scroll, 300);
 }

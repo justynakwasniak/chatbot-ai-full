@@ -16,6 +16,7 @@ import { ChatSidebar } from "./chat-sidebar"
 import { ChatWindow } from "./chat-window"
 import { ErrorBanner } from "./error-banner"
 import { cn } from "@/lib/utils"
+import { useMobileViewport } from "@/lib/mobile-keyboard"
 
 function getErrorMessage(error: unknown, fallback: string): string {
   return error instanceof Error ? error.message : fallback
@@ -243,9 +244,10 @@ export function ChatApp() {
 
   const userEmail = session.user.email ?? "User"
   const userInitials = userEmail.slice(0, 2).toUpperCase()
+  const { isMobile, height: viewportHeight, offsetTop: viewportOffsetTop } = useMobileViewport()
 
-  return (
-    <div className="relative flex h-dvh overflow-hidden bg-background">
+  const chatContent = (
+    <>
       {bannerError && <ErrorBanner message={bannerError} onDismiss={clearBannerError} />}
 
       <div
@@ -309,6 +311,28 @@ export function ChatApp() {
           isAiTyping={isAiTyping}
         />
       </main>
+    </>
+  )
+
+  if (!isMobile) {
+    return (
+      <div className="relative flex h-dvh overflow-hidden bg-background">
+        {chatContent}
+      </div>
+    )
+  }
+
+  return (
+    <div
+      className="fixed left-0 right-0 z-0 flex flex-col overflow-hidden bg-background"
+      style={{
+        top: viewportOffsetTop,
+        height: viewportHeight > 0 ? viewportHeight : "100dvh",
+      }}
+    >
+      <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden">
+        {chatContent}
+      </div>
     </div>
   )
 }

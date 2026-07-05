@@ -3,23 +3,25 @@
 import { useRef, useState } from "react"
 import type { FocusEvent, KeyboardEvent } from "react"
 import { ArrowUp, Paperclip, Mic } from "lucide-react"
-import { scrollFocusedIntoView, useVisualViewportBottom } from "@/lib/mobile-keyboard"
+import { useIsMobileLayout, scrollFocusedIntoView } from "@/lib/mobile-keyboard"
 
 interface ChatInputProps {
   onSend: (text: string) => void
   disabled?: boolean
+  onFocus?: () => void
 }
 
-export function ChatInput({ onSend, disabled = false }: ChatInputProps) {
+export function ChatInput({ onSend, disabled = false, onFocus }: ChatInputProps) {
   const [value, setValue] = useState("")
   const textareaRef = useRef<HTMLTextAreaElement>(null)
-  const { isMobile, bottomOffset } = useVisualViewportBottom()
+  const isMobile = useIsMobileLayout()
 
   function handleInput() {
     const el = textareaRef.current
     if (!el) return
     el.style.height = "auto"
     el.style.height = `${Math.min(el.scrollHeight, 160)}px`
+    if (isMobile) onFocus?.()
   }
 
   function submit() {
@@ -39,6 +41,7 @@ export function ChatInput({ onSend, disabled = false }: ChatInputProps) {
   }
 
   function handleFocus(e: FocusEvent<HTMLTextAreaElement>) {
+    onFocus?.()
     scrollFocusedIntoView(e.currentTarget)
   }
 
@@ -92,19 +95,9 @@ export function ChatInput({ onSend, disabled = false }: ChatInputProps) {
     </div>
   )
 
-  if (!isMobile) {
-    return <div className="shrink-0 px-4 pb-4 pt-2 sm:px-6">{inputBar}</div>
-  }
-
   return (
-    <>
-      <div className="h-[5.5rem] shrink-0" aria-hidden />
-      <div
-        className="fixed inset-x-0 z-30 border-t border-border bg-background/95 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2 backdrop-blur-md"
-        style={{ bottom: bottomOffset }}
-      >
-        {inputBar}
-      </div>
-    </>
+    <div className="shrink-0 border-t border-border bg-background/95 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2 backdrop-blur-md sm:px-6 sm:pb-4">
+      {inputBar}
+    </div>
   )
 }
