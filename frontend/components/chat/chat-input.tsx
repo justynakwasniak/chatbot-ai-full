@@ -7,9 +7,10 @@ import { scrollFocusedIntoView, useVisualViewportBottom } from "@/lib/mobile-key
 
 interface ChatInputProps {
   onSend: (text: string) => void
+  disabled?: boolean
 }
 
-export function ChatInput({ onSend }: ChatInputProps) {
+export function ChatInput({ onSend, disabled = false }: ChatInputProps) {
   const [value, setValue] = useState("")
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const { isMobile, bottomOffset } = useVisualViewportBottom()
@@ -22,6 +23,7 @@ export function ChatInput({ onSend }: ChatInputProps) {
   }
 
   function submit() {
+    if (disabled) return
     const trimmed = value.trim()
     if (!trimmed) return
     onSend(trimmed)
@@ -59,8 +61,9 @@ export function ChatInput({ onSend }: ChatInputProps) {
           onFocus={handleFocus}
           onKeyDown={handleKeyDown}
           rows={1}
-          placeholder="Message HablaAI..."
-          className="max-h-40 flex-1 resize-none bg-transparent py-2 text-base leading-relaxed text-foreground placeholder:text-muted-foreground focus:outline-none"
+          disabled={disabled}
+          placeholder={disabled ? "Waiting for response..." : "Message HablaAI..."}
+          className="max-h-40 flex-1 resize-none bg-transparent py-2 text-base leading-relaxed text-foreground placeholder:text-muted-foreground focus:outline-none disabled:cursor-not-allowed disabled:opacity-60"
         />
 
         <button
@@ -74,7 +77,7 @@ export function ChatInput({ onSend }: ChatInputProps) {
         <button
           type="button"
           onClick={submit}
-          disabled={!value.trim()}
+          disabled={disabled || !value.trim()}
           className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:brightness-110 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
           aria-label="Send message"
         >

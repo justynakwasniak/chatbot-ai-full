@@ -4,20 +4,22 @@ import { useEffect, useRef } from "react"
 import type { Conversation, Message } from "@/lib/chat-data"
 import { ChatMessage } from "./chat-message"
 import { ChatInput } from "./chat-input"
+import { TypingIndicator } from "./typing-indicator"
 import { PanelLeft, Sparkles } from "lucide-react"
 
 interface ChatWindowProps {
   conversation: Conversation | undefined
   onSend: (text: string) => void
   onOpenSidebar: () => void
+  isAiTyping?: boolean
 }
 
-export function ChatWindow({ conversation, onSend, onOpenSidebar }: ChatWindowProps) {
+export function ChatWindow({ conversation, onSend, onOpenSidebar, isAiTyping = false }: ChatWindowProps) {
   const scrollRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" })
-  }, [conversation?.messages.length, conversation?.id])
+  }, [conversation?.messages.length, conversation?.id, isAiTyping])
 
   return (
     <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col">
@@ -45,7 +47,12 @@ export function ChatWindow({ conversation, onSend, onOpenSidebar }: ChatWindowPr
       <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
         <div className="mx-auto flex max-w-3xl flex-col gap-6 px-4 py-6 sm:px-6">
           {conversation && conversation.messages.length > 0 ? (
-            conversation.messages.map((m: Message) => <ChatMessage key={m.id} message={m} />)
+            <>
+              {conversation.messages.map((m: Message) => <ChatMessage key={m.id} message={m} />)}
+              {isAiTyping && <TypingIndicator />}
+            </>
+          ) : isAiTyping ? (
+            <TypingIndicator />
           ) : (
             <EmptyState onSend={onSend} />
           )}
@@ -53,7 +60,7 @@ export function ChatWindow({ conversation, onSend, onOpenSidebar }: ChatWindowPr
       </div>
 
       {/* Input */}
-      <ChatInput onSend={onSend} />
+      <ChatInput onSend={onSend} disabled={isAiTyping} />
     </div>
   )
 }

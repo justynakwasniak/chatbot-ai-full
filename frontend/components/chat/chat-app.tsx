@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import type { Session } from "@supabase/supabase-js"
 import type { Conversation, Message } from "@/lib/chat-data"
 import {
@@ -14,7 +14,12 @@ import { LoginForm } from "@/components/auth/login-form"
 import { LoadingScreen } from "@/components/loading-screen"
 import { ChatSidebar } from "./chat-sidebar"
 import { ChatWindow } from "./chat-window"
+import { ErrorBanner } from "./error-banner"
 import { cn } from "@/lib/utils"
+
+function getErrorMessage(error: unknown, fallback: string): string {
+  return error instanceof Error ? error.message : fallback
+}
 
 export function ChatApp() {
   const [session, setSession] = useState<Session | null>(null)
@@ -23,9 +28,39 @@ export function ChatApp() {
   const [activeId, setActiveId] = useState<string>("")
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
-  const [loadError, setLoadError] = useState<string | null>(null)
+  const [isAiTyping, setIsAiTyping] = useState(false)
+  const [bannerError, setBannerError] = useState<string | null>(null)
+  const bannerTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const active = conversations.find((c) => c.id === activeId)
+
+  const clearBannerError = useCallback(() => {
+    if (bannerTimeoutRef.current) {
+      clearTimeout(bannerTimeoutRef.current)
+      bannerTimeoutRef.current = null
+    }
+    setBannerError(null)
+  }, [])
+
+  const showBannerError = useCallback((message: string, autoDismissMs = 6000) => {
+    if (bannerTimeoutRef.current) {
+      clearTimeout(bannerTimeoutRef.current)
+      bannerTimeoutRef.current = null
+    }
+    setBannerError(message)
+    if (autoDismissMs > 0) {
+      bannerTimeoutRef.current = setTimeout(() => {
+        setBannerError(null)
+        bannerTimeoutRef.current = null
+      }, autoDismissMs)
+    }
+  }, [])
+
+  useEffect(() => {
+    return () => {
+      if (bannerTimeoutRef.current) clearTimeout(bannerTimeoutRef.current)
+    }
+  }, [])
 
   useEffect(() => {
     try {
@@ -42,16 +77,16 @@ export function ChatApp() {
       return () => subscription.unsubscribe()
     } catch (error) {
       console.error(error)
-      setLoadError(error instanceof Error ? error.message : "Auth configuration error")
+      showBannerError(getErrorMessage(error, "Auth configuration error"), 0)
       setAuthReady(true)
     }
-  }, [])
+  }, [showBannerError])
 
   useEffect(() => {
     if (!session) {
       setConversations([])
       setActiveId("")
-      setLoadError(null)
+      clearBannerError()
       setIsLoading(false)
       return
     }
@@ -59,7 +94,7 @@ export function ChatApp() {
     async function loadConversations() {
       setIsLoading(true)
       try {
-        setLoadError(null)
+        clearBannerError()
         const data = await fetchConversations()
 
         if (data.length > 0) {
@@ -73,16 +108,14 @@ export function ChatApp() {
         setActiveId(created.id)
       } catch (error) {
         console.error("Error loading conversations:", error)
-        setLoadError(
-          error instanceof Error ? error.message : "Failed to load conversations",
-        )
+        showBannerError(getErrorMessage(error, "Failed to load conversations"), 0)
       } finally {
         setIsLoading(false)
       }
     }
 
     loadConversations()
-  }, [session])
+  }, [session, clearBannerError, showBannerError])
 
   async function handleSend(text: string) {
     if (!activeId) return
@@ -104,6 +137,7 @@ export function ChatApp() {
       ),
     )
 
+    setIsAiTyping(true)
     try {
       const data = await sendChatMessage(activeId, text)
       const resolvedId = data.conversation_id ?? activeId
@@ -142,6 +176,8 @@ export function ChatApp() {
             : c,
         ),
       )
+    } finally {
+      setIsAiTyping(false)
     }
   }
 
@@ -153,6 +189,7 @@ export function ChatApp() {
       setSidebarOpen(false)
     } catch (error) {
       console.error("Error creating conversation:", error)
+      showBannerError(getErrorMessage(error, "Failed to create a new chat. Please try again."))
     }
   }
 
@@ -170,6 +207,7 @@ export function ChatApp() {
       )
     } catch (error) {
       console.error("Error loading conversation:", error)
+      showBannerError(getErrorMessage(error, "Failed to load conversation. Please try again."))
     }
   }
 
@@ -208,11 +246,7 @@ export function ChatApp() {
 
   return (
     <div className="relative flex h-dvh overflow-hidden bg-background">
-      {loadError && (
-        <div className="absolute left-0 right-0 top-0 z-20 border-b border-destructive/30 bg-destructive/10 px-4 py-2 text-center text-xs text-destructive">
-          {loadError}
-        </div>
-      )}
+      {bannerError && <ErrorBanner message={bannerError} onDismiss={clearBannerError} />}
 
       <div
         aria-hidden
@@ -272,6 +306,7 @@ export function ChatApp() {
           conversation={active}
           onSend={handleSend}
           onOpenSidebar={() => setSidebarOpen(true)}
+          isAiTyping={isAiTyping}
         />
       </main>
     </div>
