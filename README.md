@@ -8,6 +8,10 @@ A full-stack demo app for practicing Spanish with an AI tutor. Built as a **port
 > - **No real email required.** Use any email and password to sign up (e.g. `test@example.com`). You do **not** need a real inbox — email confirmation is disabled for the demo.
 > - **Fair use limit:** **30 user messages per account per day** (UTC). This protects the free-tier database and AI API costs if many people try the live demo.
 
+## Demo
+
+[![HablaAI demo](https://img.youtube.com/vi/VIDEO_ID/hqdefault.jpg)](https://www.youtube.com/watch?v=nVaOx6Gl5N4)
+
 ## Features
 
 - Email + password auth (Supabase)
@@ -153,6 +157,16 @@ All chat routes except `/status` require `Authorization: Bearer <supabase_jwt>`.
 - **Backend:** Render (`backend/`, see `render.yaml`) — set `SUPABASE_*`, `GROQ_API_KEY`, `FRONTEND_URL`, optional `DAILY_MESSAGE_LIMIT`  
 
 After deploying the backend, redeploy the frontend if you add new API routes.
+
+## Adding a demo video to this README
+
+1. **Record** a short screen capture (30–90 s): login → send a message → show AI reply. On Windows: **Win + G** (Xbox Game Bar) or [OBS Studio](https://obsproject.com/) (free).
+2. **Upload** the video (easiest for README + LinkedIn):
+   - [YouTube](https://studio.youtube.com) → **Create** → upload → set visibility to **Unlisted**
+   - Copy the video ID from the URL: `youtube.com/watch?v=`**`dQw4w9WgXcQ`**
+3. **Edit** the [Demo](#demo) section above: replace both `VIDEO_ID` placeholders with your ID.
+
+**Without YouTube:** open a GitHub **Issue** in this repo, drag your `.mp4` into the comment box, wait for upload, copy the `https://github.com/user-attachments/assets/...` URL, and replace the YouTube line with that URL (GitHub embeds it automatically).
 
 ## Security (summary)
 
