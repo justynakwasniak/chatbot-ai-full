@@ -1,7 +1,11 @@
+"use client"
+
+import { useEffect, useState } from "react"
 import { cn } from "@/lib/utils"
 import { formatMessageTime } from "@/lib/format-time"
+import { isSpeechSupported, speakSpanish } from "@/lib/speech"
 import type { Message } from "@/lib/chat-data"
-import { Sparkles, User } from "lucide-react"
+import { Sparkles, User, Volume2 } from "lucide-react"
 
 interface ChatMessageProps {
   message: Message
@@ -9,6 +13,17 @@ interface ChatMessageProps {
 
 export function ChatMessage({ message }: ChatMessageProps) {
   const isUser = message.role === "user"
+  const isError = message.content.startsWith("❌")
+  const [canSpeak, setCanSpeak] = useState(false)
+
+  useEffect(() => {
+    setCanSpeak(isSpeechSupported())
+  }, [])
+
+  function handleSpeak() {
+    if (!canSpeak || isError) return
+    speakSpanish(message.content)
+  }
 
   return (
     <div className={cn("flex w-full gap-3", isUser ? "justify-end" : "justify-start")}>
@@ -29,7 +44,20 @@ export function ChatMessage({ message }: ChatMessageProps) {
         >
           <p className="whitespace-pre-wrap text-pretty">{message.content}</p>
         </div>
-        <span className="px-1 text-xs text-muted-foreground">{formatMessageTime(message.timestamp)}</span>
+        <div className="flex items-center gap-1 px-1">
+          <span className="text-xs text-muted-foreground">{formatMessageTime(message.timestamp)}</span>
+          {!isUser && canSpeak && !isError && (
+            <button
+              type="button"
+              onClick={handleSpeak}
+              className="focus-ring rounded p-0.5 text-muted-foreground transition-colors hover:text-primary"
+              aria-label="Listen to pronunciation"
+              title="Listen in Spanish"
+            >
+              <Volume2 className="size-3.5" aria-hidden />
+            </button>
+          )}
+        </div>
       </div>
 
       {isUser && (
