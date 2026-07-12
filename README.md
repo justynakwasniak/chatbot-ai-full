@@ -10,7 +10,7 @@ A full-stack demo app for practicing Spanish with an AI tutor. Built as a **port
 
 ## Demo
 
-[![HablaAI demo](https://img.youtube.com/vi/VIDEO_ID/hqdefault.jpg)](https://www.youtube.com/watch?v=nVaOx6Gl5N4)
+[![HablaAI demo](https://img.youtube.com/vi/nVaOx6Gl5N4/hqdefault.jpg)](https://www.youtube.com/watch?v=nVaOx6Gl5N4)
 
 ## Features
 
