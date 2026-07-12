@@ -2,8 +2,16 @@
 
 import { useEffect, useRef, useState } from "react"
 import type { FocusEvent, KeyboardEvent } from "react"
-import { ArrowUp, Loader2, Paperclip, Mic } from "lucide-react"
+import { ArrowUp, Loader2, Mic, MicOff, Paperclip } from "lucide-react"
 import { useIsMobileLayout, scrollFocusedIntoView } from "@/lib/mobile-keyboard"
+import {
+  DICTATION_LANGS,
+  type DictationLang,
+  isRecognitionSupported,
+  startSpeechRecognition,
+  stopSpeechRecognition,
+} from "@/lib/speech-recognition"
+import { cn } from "@/lib/utils"
 
 interface ChatInputProps {
   onSend: (text: string) => void
@@ -14,8 +22,38 @@ interface ChatInputProps {
 
 export function ChatInput({ onSend, disabled = false, onFocus, focusKey }: ChatInputProps) {
   const [value, setValue] = useState("")
+  const [isListening, setIsListening] = useState(false)
+  const [canDictate, setCanDictate] = useState(false)
+  const [dictationLang, setDictationLang] = useState<DictationLang>("es-ES")
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const dictationPrefixRef = useRef("")
   const isMobile = useIsMobileLayout()
+
+  useEffect(() => {
+    setCanDictate(isRecognitionSupported())
+  }, [])
+
+  useEffect(() => {
+    if (disabled && isListening) {
+      stopSpeechRecognition()
+      setIsListening(false)
+    }
+  }, [disabled, isListening])
+
+  useEffect(() => {
+    return () => stopSpeechRecognition()
+  }, [])
+
+  function resizeTextarea() {
+    const el = textareaRef.current
+    if (!el) return
+    el.style.height = "auto"
+    el.style.height = `${Math.min(el.scrollHeight, 160)}px`
+  }
+
+  useEffect(() => {
+    resizeTextarea()
+  }, [value])
 
   useEffect(() => {
     if (isMobile || disabled) return
@@ -27,15 +65,49 @@ export function ChatInput({ onSend, disabled = false, onFocus, focusKey }: ChatI
   }, [focusKey, isMobile, disabled])
 
   function handleInput() {
-    const el = textareaRef.current
-    if (!el) return
-    el.style.height = "auto"
-    el.style.height = `${Math.min(el.scrollHeight, 160)}px`
     if (isMobile) onFocus?.()
+  }
+
+  function setDictationLanguage(lang: DictationLang) {
+    if (lang === dictationLang) return
+    if (isListening) {
+      stopSpeechRecognition()
+      setIsListening(false)
+    }
+    setDictationLang(lang)
+  }
+
+  function toggleDictation() {
+    if (disabled || !canDictate) return
+
+    if (isListening) {
+      stopSpeechRecognition()
+      setIsListening(false)
+      return
+    }
+
+    dictationPrefixRef.current = value.trim() ? `${value.trim()} ` : ""
+
+    const started = startSpeechRecognition({
+      lang: dictationLang,
+      onTranscript: (text) => {
+        setValue(dictationPrefixRef.current + text.trim())
+      },
+      onEnd: () => setIsListening(false),
+    })
+
+    if (started) {
+      setIsListening(true)
+      textareaRef.current?.focus({ preventScroll: true })
+    }
   }
 
   function submit() {
     if (disabled) return
+    if (isListening) {
+      stopSpeechRecognition()
+      setIsListening(false)
+    }
     const trimmed = value.trim()
     if (!trimmed) return
     onSend(trimmed)
@@ -79,17 +151,66 @@ export function ChatInput({ onSend, disabled = false, onFocus, focusKey }: ChatI
           onKeyDown={handleKeyDown}
           rows={1}
           disabled={disabled}
-          placeholder={disabled ? "Waiting for response..." : "Message HablaAI..."}
+          placeholder={
+            disabled
+              ? "Waiting for response..."
+              : isListening
+                ? "Listening..."
+                : "Message HablaAI..."
+          }
           className="max-h-40 flex-1 resize-none bg-transparent py-2 text-base leading-relaxed text-foreground placeholder:text-muted-foreground focus:outline-none disabled:cursor-not-allowed disabled:opacity-60"
         />
 
-        <button
-          type="button"
-          className="focus-ring flex size-9 shrink-0 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-          aria-label="Record voice message"
-        >
-          <Mic className="size-5" aria-hidden />
-        </button>
+        {canDictate && (
+          <div
+            className="flex shrink-0 flex-col items-center gap-1"
+            role="group"
+            aria-label="Dictation language"
+          >
+            <div className="flex rounded-lg border border-border bg-secondary/50 p-0.5">
+              {DICTATION_LANGS.map(({ id, label }) => (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => setDictationLanguage(id)}
+                  disabled={disabled}
+                  className={cn(
+                    "focus-ring rounded-md px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide transition-colors",
+                    dictationLang === id
+                      ? "bg-background text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground",
+                    disabled && "cursor-not-allowed opacity-40",
+                  )}
+                  aria-pressed={dictationLang === id}
+                  title={id === "es-ES" ? "Dictate in Spanish" : "Dictate in English"}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+            <button
+              type="button"
+              onClick={toggleDictation}
+              disabled={disabled}
+              className={cn(
+                "focus-ring flex size-9 shrink-0 items-center justify-center rounded-xl transition-colors",
+                isListening
+                  ? "bg-destructive/15 text-destructive ring-1 ring-destructive/40"
+                  : "text-muted-foreground hover:bg-secondary hover:text-foreground",
+                disabled && "cursor-not-allowed opacity-40",
+              )}
+              aria-label={isListening ? "Stop dictation" : `Dictate in ${dictationLang === "es-ES" ? "Spanish" : "English"}`}
+              aria-pressed={isListening}
+              title={isListening ? "Stop listening" : "Speak instead of typing"}
+            >
+              {isListening ? (
+                <MicOff className="size-5" aria-hidden />
+              ) : (
+                <Mic className="size-5" aria-hidden />
+              )}
+            </button>
+          </div>
+        )}
 
         <button
           type="button"
