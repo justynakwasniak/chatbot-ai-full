@@ -22,12 +22,32 @@ export function logServerError(context: string, error: unknown): void {
 }
 
 export function getUserError(error: unknown, fallback: string): string {
-  if (process.env.NODE_ENV !== 'production' && error instanceof Error && error.message) {
-    return error.message;
-  }
+  if (error instanceof Error && error.message) {
+    const msg = error.message;
 
-  if (error instanceof Error && error.message.includes('Conversation not found')) {
-    return USER_ERRORS.CONVERSATION_NOT_FOUND;
+    if (msg.includes('Conversation not found')) {
+      return USER_ERRORS.CONVERSATION_NOT_FOUND;
+    }
+
+    if (
+      msg.includes('Attachments are not enabled') ||
+      (msg.includes('attachments') && msg.includes('column'))
+    ) {
+      return 'Attachments are not enabled in the database yet. Run migration-attachments.sql in Supabase.';
+    }
+
+    if (
+      msg.startsWith('Invalid attachment') ||
+      msg.startsWith('Unsupported attachment') ||
+      msg.startsWith('You can attach') ||
+      msg.startsWith('Image attachment is too large')
+    ) {
+      return msg;
+    }
+
+    if (process.env.NODE_ENV !== 'production') {
+      return msg;
+    }
   }
 
   return fallback;

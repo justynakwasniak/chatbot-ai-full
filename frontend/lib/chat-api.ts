@@ -121,7 +121,7 @@ export async function sendChatMessage(
     body: JSON.stringify({
       message,
       conversation_id: conversationId,
-      attachments,
+      ...(attachments.length > 0 ? { attachments } : {}),
     }),
   });
 }

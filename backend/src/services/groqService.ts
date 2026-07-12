@@ -12,7 +12,8 @@ const groq = new OpenAI({
 });
 
 const TEXT_MODEL = process.env.GROQ_TEXT_MODEL || 'llama-3.3-70b-versatile';
-const VISION_MODEL = process.env.GROQ_VISION_MODEL || 'llama-3.2-90b-vision-preview';
+const VISION_MODEL =
+  process.env.GROQ_VISION_MODEL || 'meta-llama/llama-4-scout-17b-16e-instruct';
 
 const systemPrompt = `
 You are a friendly and patient Spanish tutor for English-speaking beginners (A1–A2 level).
@@ -135,6 +136,21 @@ function buildUserGroqMessage(message: ChatHistoryMessage): ChatCompletionMessag
   return { role: 'user', content };
 }
 
+function buildTextOnlyHistory(history: ChatHistoryMessage[]): ChatHistoryMessage[] {
+  return history.map((message) => {
+    if (message.role !== 'user') return message;
+
+    const attachments = message.attachments ?? [];
+    const textAttachments = attachments.filter((attachment) => attachment.extractedText);
+
+    return {
+      role: message.role,
+      content: buildUserMessageText(message.content, textAttachments),
+      attachments: [],
+    };
+  });
+}
+
 export async function getTeacherResponse(history: ChatHistoryMessage[]): Promise<string> {
   const useVision = historyHasImages(history);
   const model = useVision ? VISION_MODEL : TEXT_MODEL;
@@ -148,12 +164,35 @@ export async function getTeacherResponse(history: ChatHistoryMessage[]): Promise
     ),
   ];
 
-  const completion = await groq.chat.completions.create({
-    model,
-    messages,
-    temperature: 0.7,
-    max_tokens: useVision ? 500 : 300,
-  });
+  try {
+    const completion = await groq.chat.completions.create({
+      model,
+      messages,
+      temperature: 0.7,
+      max_tokens: useVision ? 500 : 300,
+    });
 
-  return completion.choices[0]?.message?.content?.trim() ?? 'No response';
+    return completion.choices[0]?.message?.content?.trim() ?? 'No response';
+  } catch (error) {
+    if (!useVision) throw error;
+
+    const fallbackHistory = buildTextOnlyHistory(history);
+    const fallbackMessages: ChatCompletionMessageParam[] = [
+      { role: 'system', content: systemPrompt },
+      ...fallbackHistory.map((message) =>
+        message.role === 'assistant'
+          ? { role: 'assistant' as const, content: message.content }
+          : buildUserGroqMessage(message),
+      ),
+    ];
+
+    const completion = await groq.chat.completions.create({
+      model: TEXT_MODEL,
+      messages: fallbackMessages,
+      temperature: 0.7,
+      max_tokens: 300,
+    });
+
+    return completion.choices[0]?.message?.content?.trim() ?? 'No response';
+  }
 }

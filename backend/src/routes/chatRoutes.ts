@@ -204,6 +204,10 @@ router.post('/message', async (req: Request, res: Response) => {
       return res.status(429).json({ success: false, error: USER_ERRORS.GROQ_RATE_LIMIT });
     }
 
+    if (status === 400 || status === 404) {
+      return res.status(503).json({ success: false, error: USER_ERRORS.AI_UNAVAILABLE });
+    }
+
     res.status(500).json({
       success: false,
       error: getUserError(error, USER_ERRORS.FAILED_SEND_MESSAGE),

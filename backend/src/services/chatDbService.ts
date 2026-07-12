@@ -149,6 +149,30 @@ export async function ensureConversation(userId: string, conversationId?: string
   return created.id;
 }
 
+function buildMessageInsert(
+  conversationId: string,
+  role: 'user' | 'assistant',
+  content: string,
+  attachments: MessageAttachment[] = [],
+) {
+  const row: {
+    conversation_id: string;
+    role: 'user' | 'assistant';
+    content: string;
+    attachments?: MessageAttachment[];
+  } = {
+    conversation_id: conversationId,
+    role,
+    content,
+  };
+
+  if (attachments.length > 0) {
+    row.attachments = attachments;
+  }
+
+  return row;
+}
+
 export async function addMessage(
   conversationId: string,
   userId: string,
@@ -172,7 +196,7 @@ export async function addMessage(
 
   const { data, error } = await supabase
     .from('messages')
-    .insert({ conversation_id: conversationId, role, content, attachments })
+    .insert(buildMessageInsert(conversationId, role, content, attachments))
     .select('*')
     .single();
 
