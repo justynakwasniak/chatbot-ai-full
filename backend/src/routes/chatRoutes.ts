@@ -13,6 +13,7 @@ import {
 } from '../services/chatDbService';
 import { getTeacherResponse } from '../services/groqService';
 import { getHttpStatus, getUserError, logServerError, USER_ERRORS } from '../utils/apiErrors';
+import { parseAttachments } from '../utils/attachments';
 
 const DAILY_MESSAGE_LIMIT = Number(process.env.DAILY_MESSAGE_LIMIT) || 50;
 const CHAT_HISTORY_LIMIT = Number(process.env.CHAT_HISTORY_LIMIT) || 20;
@@ -132,9 +133,20 @@ router.delete('/conversations/:id', async (req: Request, res: Response) => {
 router.post('/message', async (req: Request, res: Response) => {
   try {
     const userId = req.userId!;
-    const { message, conversation_id: conversationId } = req.body;
+    const { message, conversation_id: conversationId, attachments: rawAttachments } = req.body;
+    const messageText = typeof message === 'string' ? message.trim() : '';
 
-    if (!message) {
+    let attachments;
+    try {
+      attachments = parseAttachments(rawAttachments);
+    } catch (error) {
+      return res.status(400).json({
+        success: false,
+        error: getUserError(error, USER_ERRORS.INVALID_ATTACHMENTS),
+      });
+    }
+
+    if (!messageText && attachments.length === 0) {
       return res.status(400).json({ success: false, error: USER_ERRORS.MESSAGE_REQUIRED });
     }
 
@@ -156,12 +168,13 @@ router.post('/message', async (req: Request, res: Response) => {
     }
 
     const resolvedConversationId = await ensureConversation(userId, conversationId);
-    await addMessage(resolvedConversationId, userId, 'user', message);
+    await addMessage(resolvedConversationId, userId, 'user', messageText, attachments);
 
     const storedMessages = await getConversationMessages(resolvedConversationId, userId);
     const history = storedMessages.slice(-CHAT_HISTORY_LIMIT).map((item) => ({
       role: item.role,
       content: item.content,
+      attachments: item.attachments ?? [],
     }));
 
     const teacherResponse = await getTeacherResponse(history);

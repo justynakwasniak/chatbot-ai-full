@@ -5,6 +5,7 @@ export const USER_ERRORS = {
   AI_UNAVAILABLE: 'AI tutor is temporarily unavailable. Please try again later.',
   CONVERSATION_NOT_FOUND: 'Conversation not found.',
   MESSAGE_REQUIRED: 'Message is required.',
+  INVALID_ATTACHMENTS: 'Invalid attachment. Use images or .txt files up to 5 MB.',
   FAILED_LOAD_CONVERSATIONS: 'Failed to load conversations.',
   FAILED_CREATE_CONVERSATION: 'Failed to create a new chat.',
   FAILED_LOAD_CONVERSATION: 'Failed to load conversation.',

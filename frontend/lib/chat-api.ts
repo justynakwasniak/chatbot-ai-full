@@ -1,4 +1,4 @@
-import type { Conversation } from '@/lib/chat-data';
+import type { Conversation, MessageAttachment } from '@/lib/chat-data';
 import { getAccessToken } from '@/lib/supabase-client';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
@@ -101,7 +101,11 @@ export async function deleteConversation(conversationId: string): Promise<void> 
   });
 }
 
-export async function sendChatMessage(conversationId: string, message: string) {
+export async function sendChatMessage(
+  conversationId: string,
+  message: string,
+  attachments: MessageAttachment[] = [],
+) {
   return request<{
     success: true;
     response: string;
@@ -117,6 +121,7 @@ export async function sendChatMessage(conversationId: string, message: string) {
     body: JSON.stringify({
       message,
       conversation_id: conversationId,
+      attachments,
     }),
   });
 }

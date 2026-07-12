@@ -118,29 +118,33 @@ export function ChatApp() {
     loadConversations()
   }, [session, clearBannerError, showBannerError])
 
-  async function handleSend(text: string) {
+  async function handleSend(text: string, attachments?: Message["attachments"]) {
     if (!activeId) return
 
     const now = new Date().toISOString()
+    const preview =
+      text.trim() ||
+      (attachments?.length ? `📎 ${attachments.map((item) => item.name).join(", ")}` : "")
 
     const newMessage: Message = {
       id: `${Date.now()}`,
       role: "user",
       content: text,
       timestamp: now,
+      attachments,
     }
 
     setConversations((prev) =>
       prev.map((c) =>
         c.id === activeId
-          ? { ...c, messages: [...c.messages, newMessage], preview: text, updatedAt: "Now" }
+          ? { ...c, messages: [...c.messages, newMessage], preview, updatedAt: "Now" }
           : c,
       ),
     )
 
     setIsAiTyping(true)
     try {
-      const data = await sendChatMessage(activeId, text)
+      const data = await sendChatMessage(activeId, text, attachments ?? [])
       const resolvedId = data.conversation_id ?? activeId
 
       if (resolvedId !== activeId) {
@@ -329,6 +333,7 @@ export function ChatApp() {
           conversation={active}
           onSend={handleSend}
           onOpenSidebar={() => setSidebarOpen(true)}
+          onError={showBannerError}
           isAiTyping={isAiTyping}
         />
       </main>

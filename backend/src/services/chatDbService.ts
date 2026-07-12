@@ -1,4 +1,5 @@
 import { getSupabase } from '../config/supabase';
+import type { MessageAttachment } from '../utils/attachments';
 
 export interface DbConversation {
   id: string;
@@ -14,6 +15,7 @@ export interface DbMessage {
   conversation_id: string;
   role: 'user' | 'assistant';
   content: string;
+  attachments?: MessageAttachment[];
   created_at: string;
 }
 
@@ -152,6 +154,7 @@ export async function addMessage(
   userId: string,
   role: 'user' | 'assistant',
   content: string,
+  attachments: MessageAttachment[] = [],
 ) {
   const supabase = getSupabase();
   if (!supabase) throw new Error('Supabase not configured');
@@ -169,16 +172,19 @@ export async function addMessage(
 
   const { data, error } = await supabase
     .from('messages')
-    .insert({ conversation_id: conversationId, role, content })
+    .insert({ conversation_id: conversationId, role, content, attachments })
     .select('*')
     .single();
 
   if (error) throw error;
 
-  const preview = content.slice(0, 120);
+  const previewSource =
+    content.trim() ||
+    (attachments.length > 0 ? `📎 ${attachments.map((item) => item.name).join(', ')}` : '');
+  const preview = previewSource.slice(0, 120);
   const title =
     conversation.title === 'New chat' && role === 'user'
-      ? content.slice(0, 40) + (content.length > 40 ? '...' : '')
+      ? previewSource.slice(0, 40) + (previewSource.length > 40 ? '...' : '')
       : conversation.title;
 
   await supabase
@@ -204,6 +210,7 @@ export function mapConversationForApi(conversation: DbConversation, messages: Db
       role: message.role,
       content: message.content,
       timestamp: message.created_at,
+      attachments: message.attachments ?? [],
     })),
   };
 }

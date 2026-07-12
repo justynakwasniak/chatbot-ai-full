@@ -9,12 +9,13 @@ import { PanelLeft, Sparkles } from "lucide-react"
 
 interface ChatWindowProps {
   conversation: Conversation | undefined
-  onSend: (text: string) => void
+  onSend: (text: string, attachments?: Message["attachments"]) => void
   onOpenSidebar: () => void
+  onError?: (message: string) => void
   isAiTyping?: boolean
 }
 
-export function ChatWindow({ conversation, onSend, onOpenSidebar, isAiTyping = false }: ChatWindowProps) {
+export function ChatWindow({ conversation, onSend, onOpenSidebar, onError, isAiTyping = false }: ChatWindowProps) {
   const scrollRef = useRef<HTMLDivElement>(null)
 
   function scrollToBottom() {
@@ -71,6 +72,7 @@ export function ChatWindow({ conversation, onSend, onOpenSidebar, isAiTyping = f
         onSend={onSend}
         disabled={isAiTyping}
         onFocus={scrollToBottom}
+        onError={onError}
         focusKey={conversation?.id}
       />
     </div>

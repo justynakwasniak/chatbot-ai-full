@@ -6,6 +6,7 @@ import { formatMessageTime } from "@/lib/format-time"
 import { isSpeechSupported, speakSpanish } from "@/lib/speech"
 import type { Message } from "@/lib/chat-data"
 import { Sparkles, User, Volume2 } from "lucide-react"
+import { MessageAttachments } from "./message-attachments"
 
 interface ChatMessageProps {
   message: Message
@@ -42,7 +43,12 @@ export function ChatMessage({ message }: ChatMessageProps) {
               : "glass rounded-bl-md border border-border text-foreground",
           )}
         >
-          <p className="whitespace-pre-wrap text-pretty">{message.content}</p>
+          {message.content ? (
+            <p className="whitespace-pre-wrap text-pretty">{message.content}</p>
+          ) : null}
+          {message.attachments && message.attachments.length > 0 && (
+            <MessageAttachments attachments={message.attachments} />
+          )}
         </div>
         <div className="flex items-center gap-1 px-1">
           <span className="text-xs text-muted-foreground">{formatMessageTime(message.timestamp)}</span>

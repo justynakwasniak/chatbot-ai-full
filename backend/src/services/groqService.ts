@@ -1,10 +1,18 @@
+import type { ChatCompletionContentPart, ChatCompletionMessageParam } from 'openai/resources/chat/completions';
 import OpenAI from 'openai';
+import {
+  buildUserMessageText,
+  historyHasImages,
+  type MessageAttachment,
+} from '../utils/attachments';
 
 const groq = new OpenAI({
   apiKey: process.env.GROQ_API_KEY,
   baseURL: 'https://api.groq.com/openai/v1',
 });
 
+const TEXT_MODEL = process.env.GROQ_TEXT_MODEL || 'llama-3.3-70b-versatile';
+const VISION_MODEL = process.env.GROQ_VISION_MODEL || 'llama-3.2-90b-vision-preview';
 
 const systemPrompt = `
 You are a friendly and patient Spanish tutor for English-speaking beginners (A1–A2 level).
@@ -94,26 +102,57 @@ You are friendly, patient and motivating.
 You sound like a real private tutor chatting with a student—not like a dictionary or grammar book.
 
 Your goal is not only to answer questions, but to keep the student speaking Spanish.
-`;
 
+When the user shares an image, describe what you see in simple Spanish and connect it to a useful learning moment.
+`;
 
 export interface ChatHistoryMessage {
   role: 'user' | 'assistant';
   content: string;
+  attachments?: MessageAttachment[];
+}
+
+function buildUserGroqMessage(message: ChatHistoryMessage): ChatCompletionMessageParam {
+  const attachments = message.attachments ?? [];
+  const images = attachments.filter((attachment) => attachment.mimeType.startsWith('image/'));
+  const text = buildUserMessageText(message.content, attachments);
+
+  if (images.length === 0) {
+    return { role: 'user', content: text };
+  }
+
+  const content: ChatCompletionContentPart[] = [{ type: 'text', text }];
+
+  for (const image of images) {
+    if (image.dataUrl) {
+      content.push({
+        type: 'image_url',
+        image_url: { url: image.dataUrl },
+      });
+    }
+  }
+
+  return { role: 'user', content };
 }
 
 export async function getTeacherResponse(history: ChatHistoryMessage[]): Promise<string> {
+  const useVision = historyHasImages(history);
+  const model = useVision ? VISION_MODEL : TEXT_MODEL;
+
+  const messages: ChatCompletionMessageParam[] = [
+    { role: 'system', content: systemPrompt },
+    ...history.map((message) =>
+      message.role === 'assistant'
+        ? { role: 'assistant' as const, content: message.content }
+        : buildUserGroqMessage(message),
+    ),
+  ];
+
   const completion = await groq.chat.completions.create({
-    model: 'llama-3.3-70b-versatile',
-    messages: [
-      { role: 'system', content: systemPrompt },
-      ...history.map((message) => ({
-        role: message.role,
-        content: message.content,
-      })),
-    ],
+    model,
+    messages,
     temperature: 0.7,
-    max_tokens: 300,
+    max_tokens: useVision ? 500 : 300,
   });
 
   return completion.choices[0]?.message?.content?.trim() ?? 'No response';
