@@ -97,12 +97,20 @@ Your goal is not only to answer questions, but to keep the student speaking Span
 `;
 
 
-export async function getTeacherResponse(userMessage: string): Promise<string> {
+export interface ChatHistoryMessage {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
+export async function getTeacherResponse(history: ChatHistoryMessage[]): Promise<string> {
   const completion = await groq.chat.completions.create({
     model: 'llama-3.3-70b-versatile',
     messages: [
       { role: 'system', content: systemPrompt },
-      { role: 'user', content: userMessage },
+      ...history.map((message) => ({
+        role: message.role,
+        content: message.content,
+      })),
     ],
     temperature: 0.7,
     max_tokens: 300,

@@ -14,7 +14,8 @@ import {
 import { getTeacherResponse } from '../services/groqService';
 import { getHttpStatus, getUserError, logServerError, USER_ERRORS } from '../utils/apiErrors';
 
-const DAILY_MESSAGE_LIMIT = Number(process.env.DAILY_MESSAGE_LIMIT) || 30;
+const DAILY_MESSAGE_LIMIT = Number(process.env.DAILY_MESSAGE_LIMIT) || 50;
+const CHAT_HISTORY_LIMIT = Number(process.env.CHAT_HISTORY_LIMIT) || 20;
 
 const router = Router();
 
@@ -157,7 +158,13 @@ router.post('/message', async (req: Request, res: Response) => {
     const resolvedConversationId = await ensureConversation(userId, conversationId);
     await addMessage(resolvedConversationId, userId, 'user', message);
 
-    const teacherResponse = await getTeacherResponse(message);
+    const storedMessages = await getConversationMessages(resolvedConversationId, userId);
+    const history = storedMessages.slice(-CHAT_HISTORY_LIMIT).map((item) => ({
+      role: item.role,
+      content: item.content,
+    }));
+
+    const teacherResponse = await getTeacherResponse(history);
     const savedMessage = await addMessage(resolvedConversationId, userId, 'assistant', teacherResponse);
 
     res.json({
