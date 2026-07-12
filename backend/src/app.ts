@@ -26,8 +26,8 @@ app.use(cors({
   },
   credentials: true,
 }));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 app.get('/health', (req: Request, res: Response) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
@@ -37,9 +37,20 @@ app.use('/api/chat', chatRoutes);
 
 app.use((err: unknown, req: Request, res: Response, _next: NextFunction) => {
   logServerError(`${req.method} ${req.path}`, err);
-  res.status(getHttpStatus(err)).json({
+
+  const status = getHttpStatus(err);
+  const isPayloadTooLarge =
+    status === 413 ||
+    (err instanceof Error &&
+      ('type' in err && (err as { type?: string }).type === 'entity.too.large'));
+
+  res.status(status).json({
     success: false,
-    error: isProduction() ? USER_ERRORS.SERVICE_UNAVAILABLE : getErrorMessage(err),
+    error: isPayloadTooLarge
+      ? USER_ERRORS.PAYLOAD_TOO_LARGE
+      : isProduction()
+        ? USER_ERRORS.SERVICE_UNAVAILABLE
+        : getErrorMessage(err),
   });
 });
 

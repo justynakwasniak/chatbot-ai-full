@@ -176,7 +176,15 @@ export async function addMessage(
     .select('*')
     .single();
 
-  if (error) throw error;
+  if (error) {
+    const message = typeof error.message === 'string' ? error.message : '';
+    if (message.includes('attachments')) {
+      throw new Error(
+        'Attachments are not enabled in the database yet. Run backend/supabase/migration-attachments.sql in Supabase.',
+      );
+    }
+    throw error;
+  }
 
   const previewSource =
     content.trim() ||
