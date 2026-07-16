@@ -135,6 +135,23 @@ Or from the root:
 npm run dev
 ```
 
+## Tests
+
+Unit tests (Vitest) cover pure logic: attachment validation, API error mapping, TTS text cleanup, and message timestamps.
+
+API route tests for `POST /api/chat/message` use mocks (no real Groq/Supabase): auth, validation, daily limit, and happy path.
+
+```bash
+npm test
+```
+
+Or separately:
+
+```bash
+npm run test --workspace=backend
+npm run test --workspace=frontend
+```
+
 ## API Endpoints
 
 All chat routes except `/status` require `Authorization: Bearer <supabase_jwt>`.

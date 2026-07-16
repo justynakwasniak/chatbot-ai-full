@@ -7,7 +7,9 @@
     "dev": "ts-node src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
-    "lint": "eslint src --ext .ts"
+    "lint": "eslint src --ext .ts",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.38.0",
@@ -21,7 +23,10 @@
     "typescript": "^5.0.0"
   },
   "devDependencies": {
+    "@types/supertest": "^7.2.1",
     "eslint": "^8.50.0",
-    "ts-node": "^10.9.0"
+    "supertest": "^7.2.2",
+    "ts-node": "^10.9.0",
+    "vitest": "^4.1.10"
   }
 }
